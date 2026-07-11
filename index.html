@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- saved from url=(0066)file:///C:/Users/mvardaro/Downloads/FC_Production_Dashboard_2.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <title>FC Production Tracker — Dashboard</title>
 <script>
 /*!
@@ -121,36 +121,12 @@
       <h1>FC Production Tracker</h1>
     </div>
     <div class="hdr-right">
-      <div><span class="dot"></span><span class="asof" id="asof">As of 2026-07-10</span></div>
+      <div><span class="dot"></span><span class="asof" id="asof">—</span></div>
       <div style="margin-top:2px;">Source: FC_Production_Tracker.xlsx</div>
     </div>
   </div>
 
-  <div class="kpis" id="kpiStrip">
-  <div class="kpi sd">
-    <div class="label">WTD SD Packed (lbs)</div>
-    <div class="val">150,660</div>
-    <div class="sub">Week 28</div>
-  </div>
-
-  <div class="kpi bao">
-    <div class="label">WTD Bao Packed (lbs)</div>
-    <div class="val">64,269</div>
-    <div class="sub">Week 28</div>
-  </div>
-
-  <div class="kpi warn">
-    <div class="label">MTD Waste %</div>
-    <div class="val">0.8%</div>
-    <div class="sub">July</div>
-  </div>
-
-  <div class="kpi neutral">
-    <div class="label">Last Day Produced (SD+Bao)</div>
-    <div class="val">0</div>
-    <div class="sub">2026-07-10</div>
-  </div>
-</div>
+  <div class="kpis" id="kpiStrip"></div>
 
   <div class="tabs">
     <button class="tab active" data-tab="daily">Daily</button>
@@ -165,297 +141,28 @@
       <div class="card">
         <h3>SD — Daily Output</h3>
         <div class="cap">Packed lbs, most recent 14 calendar days — dimmed dates = day off. Hover/tap a bar, or see the table below, for exact values.</div>
-        <canvas id="chartDailySD" width="650" height="325" style="display: block; box-sizing: border-box; height: 260px; width: 520px;"></canvas>
+        <canvas id="chartDailySD"></canvas>
       </div>
       <div class="card">
         <h3>Bao — Daily Output</h3>
         <div class="cap">Packed lbs, most recent 14 calendar days — dimmed dates = day off. Hover/tap a bar, or see the table below, for exact values.</div>
-        <canvas id="chartDailyBao" width="650" height="325" style="display: block; box-sizing: border-box; height: 260px; width: 520px;"></canvas>
+        <canvas id="chartDailyBao"></canvas>
       </div>
     </div>
     <div class="section-title">Daily waste</div>
     <div class="grid2">
       <div class="card">
         <h3>SD Waste (lbs)</h3>
-        <canvas id="chartDailyWasteSD" height="173" width="650" style="display: block; box-sizing: border-box; height: 138px; width: 520px;"></canvas>
+        <canvas id="chartDailyWasteSD" height="80"></canvas>
       </div>
       <div class="card">
         <h3>Bao Waste (lbs)</h3>
-        <canvas id="chartDailyWasteBao" height="173" width="650" style="display: block; box-sizing: border-box; height: 138px; width: 520px;"></canvas>
+        <canvas id="chartDailyWasteBao" height="80"></canvas>
       </div>
     </div>
     <div class="section-title">Daily log</div>
     <div class="card table-scroll">
-      <table id="dailyTable" class="stackable"><thead><tr><th>Date</th><th>Wk</th><th>SD Prod</th><th>Bao Prod</th><th>SD Waste</th><th>Bao Waste</th><th>SD Packed</th><th>Bao Packed</th></tr></thead>
-<tbody><tr>
-  <td data-label="Date">2026-07-10</td><td data-label="Wk">28</td><td data-label="SD Prod">0</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">0</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-07-09</td><td data-label="Wk">28</td><td data-label="SD Prod">66,816</td><td data-label="Bao Prod">31,710</td>
-  <td data-label="SD Waste" class="">342</td><td data-label="Bao Waste" class="">211</td>
-  <td data-label="SD Packed">0</td><td data-label="Bao Packed">26,775</td>
-</tr><tr>
-  <td data-label="Date">2026-07-08</td><td data-label="Wk">28</td><td data-label="SD Prod">62,256</td><td data-label="Bao Prod">20,909</td>
-  <td data-label="SD Waste" class="neg">546</td><td data-label="Bao Waste" class="neg">460</td>
-  <td data-label="SD Packed">30,480</td><td data-label="Bao Packed">20,384</td>
-</tr><tr>
-  <td data-label="Date">2026-07-07</td><td data-label="Wk">28</td><td data-label="SD Prod">85,824</td><td data-label="Bao Prod">23,415</td>
-  <td data-label="SD Waste" class="">426</td><td data-label="Bao Waste" class="">221</td>
-  <td data-label="SD Packed">75,600</td><td data-label="Bao Packed">8,640</td>
-</tr><tr>
-  <td data-label="Date">2026-07-06</td><td data-label="Wk">28</td><td data-label="SD Prod">55,680</td><td data-label="Bao Prod">6,090</td>
-  <td data-label="SD Waste" class="neg">1,234</td><td data-label="Bao Waste" class="">270</td>
-  <td data-label="SD Packed">44,580</td><td data-label="Bao Packed">8,470</td>
-</tr><tr>
-  <td data-label="Date">2026-07-03</td><td data-label="Wk">27</td><td data-label="SD Prod">0</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">0</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-07-02</td><td data-label="Wk">27</td><td data-label="SD Prod">96,096</td><td data-label="Bao Prod">26,565</td>
-  <td data-label="SD Waste" class="">360</td><td data-label="Bao Waste" class="">112</td>
-  <td data-label="SD Packed">90,060</td><td data-label="Bao Packed">17,504</td>
-</tr><tr>
-  <td data-label="Date">2026-07-01</td><td data-label="Wk">27</td><td data-label="SD Prod">72,000</td><td data-label="Bao Prod">13,405</td>
-  <td data-label="SD Waste" class="">185</td><td data-label="Bao Waste" class="">184</td>
-  <td data-label="SD Packed">68,040</td><td data-label="Bao Packed">11,392</td>
-</tr><tr>
-  <td data-label="Date">2026-06-30</td><td data-label="Wk">27</td><td data-label="SD Prod">81,726</td><td data-label="Bao Prod">15,645</td>
-  <td data-label="SD Waste" class="">358</td><td data-label="Bao Waste" class="neg">591</td>
-  <td data-label="SD Packed">90,780</td><td data-label="Bao Packed">15,104</td>
-</tr><tr>
-  <td data-label="Date">2026-06-29</td><td data-label="Wk">27</td><td data-label="SD Prod">79,968</td><td data-label="Bao Prod">13,895</td>
-  <td data-label="SD Waste" class="">429</td><td data-label="Bao Waste" class="">166</td>
-  <td data-label="SD Packed">60,480</td><td data-label="Bao Packed">14,304</td>
-</tr><tr>
-  <td data-label="Date">2026-06-26</td><td data-label="Wk">26</td><td data-label="SD Prod">0</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">0</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-06-25</td><td data-label="Wk">26</td><td data-label="SD Prod">96,732</td><td data-label="Bao Prod">4,515</td>
-  <td data-label="SD Waste" class="">213</td><td data-label="Bao Waste" class="">278</td>
-  <td data-label="SD Packed">96,960</td><td data-label="Bao Packed">1,920</td>
-</tr><tr>
-  <td data-label="Date">2026-06-24</td><td data-label="Wk">26</td><td data-label="SD Prod">78,624</td><td data-label="Bao Prod">15,540</td>
-  <td data-label="SD Waste" class="">122</td><td data-label="Bao Waste" class="neg">514</td>
-  <td data-label="SD Packed">77,340</td><td data-label="Bao Packed">12,512</td>
-</tr><tr>
-  <td data-label="Date">2026-06-23</td><td data-label="Wk">26</td><td data-label="SD Prod">59,095</td><td data-label="Bao Prod">9,450</td>
-  <td data-label="SD Waste" class="">343</td><td data-label="Bao Waste" class="neg">526</td>
-  <td data-label="SD Packed">56,760</td><td data-label="Bao Packed">7,712</td>
-</tr><tr>
-  <td data-label="Date">2026-06-22</td><td data-label="Wk">26</td><td data-label="SD Prod">72,420</td><td data-label="Bao Prod">8,313</td>
-  <td data-label="SD Waste" class="">137</td><td data-label="Bao Waste" class="">279</td>
-  <td data-label="SD Packed">72,420</td><td data-label="Bao Packed">5,920</td>
-</tr><tr>
-  <td data-label="Date">2026-06-19</td><td data-label="Wk">25</td><td data-label="SD Prod">0</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">0</td><td data-label="Bao Packed">3,840</td>
-</tr><tr>
-  <td data-label="Date">2026-06-18</td><td data-label="Wk">25</td><td data-label="SD Prod">62,352</td><td data-label="Bao Prod">6,300</td>
-  <td data-label="SD Waste" class="">134</td><td data-label="Bao Waste" class="">23</td>
-  <td data-label="SD Packed">62,352</td><td data-label="Bao Packed">10,816</td>
-</tr><tr>
-  <td data-label="Date">2026-06-17</td><td data-label="Wk">25</td><td data-label="SD Prod">54,816</td><td data-label="Bao Prod">1,400</td>
-  <td data-label="SD Waste" class="">229</td><td data-label="Bao Waste" class="">14</td>
-  <td data-label="SD Packed">93,720</td><td data-label="Bao Packed">1,312</td>
-</tr><tr>
-  <td data-label="Date">2026-06-16</td><td data-label="Wk">25</td><td data-label="SD Prod">67,680</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">109</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">105,900</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-06-15</td><td data-label="Wk">25</td><td data-label="SD Prod">33,120</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">68</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">29,100</td><td data-label="Bao Packed">12,514</td>
-</tr><tr>
-  <td data-label="Date">2026-06-12</td><td data-label="Wk">24</td><td data-label="SD Prod">0</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">0</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-06-11</td><td data-label="Wk">24</td><td data-label="SD Prod">64,253</td><td data-label="Bao Prod">9,975</td>
-  <td data-label="SD Waste" class="">132</td><td data-label="Bao Waste" class="">122</td>
-  <td data-label="SD Packed">11,760</td><td data-label="Bao Packed">13,888</td>
-</tr><tr>
-  <td data-label="Date">2026-06-10</td><td data-label="Wk">24</td><td data-label="SD Prod">43,920</td><td data-label="Bao Prod">10,500</td>
-  <td data-label="SD Waste" class="">98</td><td data-label="Bao Waste" class="">62</td>
-  <td data-label="SD Packed">50,280</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-06-09</td><td data-label="Wk">24</td><td data-label="SD Prod">83,520</td><td data-label="Bao Prod">7,315</td>
-  <td data-label="SD Waste" class="">432</td><td data-label="Bao Waste" class="">32</td>
-  <td data-label="SD Packed">52,680</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-06-08</td><td data-label="Wk">24</td><td data-label="SD Prod">0</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">121</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">83,340</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-06-05</td><td data-label="Wk">23</td><td data-label="SD Prod">0</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">61,920</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-06-04</td><td data-label="Wk">23</td><td data-label="SD Prod">46,320</td><td data-label="Bao Prod">9,380</td>
-  <td data-label="SD Waste" class="">73</td><td data-label="Bao Waste" class="">132</td>
-  <td data-label="SD Packed">37,800</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-06-03</td><td data-label="Wk">23</td><td data-label="SD Prod">55,656</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">166</td><td data-label="Bao Waste" class="">60</td>
-  <td data-label="SD Packed">47,520</td><td data-label="Bao Packed">3,650</td>
-</tr><tr>
-  <td data-label="Date">2026-06-02</td><td data-label="Wk">23</td><td data-label="SD Prod">89,280</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">168</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">54,540</td><td data-label="Bao Packed">12,100</td>
-</tr><tr>
-  <td data-label="Date">2026-06-01</td><td data-label="Wk">23</td><td data-label="SD Prod">76,320</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">326</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">96,000</td><td data-label="Bao Packed">416</td>
-</tr><tr>
-  <td data-label="Date">2026-05-29</td><td data-label="Wk">22</td><td data-label="SD Prod">64,512</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">80</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">34,080</td><td data-label="Bao Packed">3,760</td>
-</tr><tr>
-  <td data-label="Date">2026-05-28</td><td data-label="Wk">22</td><td data-label="SD Prod">0</td><td data-label="Bao Prod">20,562</td>
-  <td data-label="SD Waste" class="">250</td><td data-label="Bao Waste" class="">268</td>
-  <td data-label="SD Packed">63,480</td><td data-label="Bao Packed">2,656</td>
-</tr><tr>
-  <td data-label="Date">2026-05-27</td><td data-label="Wk">22</td><td data-label="SD Prod">0</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">37,800</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-05-26</td><td data-label="Wk">22</td><td data-label="SD Prod">67,968</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">240</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">43,980</td><td data-label="Bao Packed">2,112</td>
-</tr><tr>
-  <td data-label="Date">2026-05-22</td><td data-label="Wk">21</td><td data-label="SD Prod">0</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">0</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-05-21</td><td data-label="Wk">21</td><td data-label="SD Prod">51,264</td><td data-label="Bao Prod">9,485</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="neg">594</td>
-  <td data-label="SD Packed">10,380</td><td data-label="Bao Packed">13,664</td>
-</tr><tr>
-  <td data-label="Date">2026-05-20</td><td data-label="Wk">21</td><td data-label="SD Prod">66,528</td><td data-label="Bao Prod">18,935</td>
-  <td data-label="SD Waste" class="">80</td><td data-label="Bao Waste" class="">296</td>
-  <td data-label="SD Packed">49,200</td><td data-label="Bao Packed">8,640</td>
-</tr><tr>
-  <td data-label="Date">2026-05-19</td><td data-label="Wk">21</td><td data-label="SD Prod">68,352</td><td data-label="Bao Prod">6,825</td>
-  <td data-label="SD Waste" class="">80</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">30,780</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-05-18</td><td data-label="Wk">21</td><td data-label="SD Prod">61,920</td><td data-label="Bao Prod">9,555</td>
-  <td data-label="SD Waste" class="">160</td><td data-label="Bao Waste" class="">152</td>
-  <td data-label="SD Packed">66,480</td><td data-label="Bao Packed">4,320</td>
-</tr><tr>
-  <td data-label="Date">2026-05-14</td><td data-label="Wk">20</td><td data-label="SD Prod">65,260</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="neg">704</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">63,240</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-05-13</td><td data-label="Wk">20</td><td data-label="SD Prod">68,700</td><td data-label="Bao Prod">13,650</td>
-  <td data-label="SD Waste" class="">260</td><td data-label="Bao Waste" class="">66</td>
-  <td data-label="SD Packed">68,700</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-05-12</td><td data-label="Wk">20</td><td data-label="SD Prod">64,320</td><td data-label="Bao Prod">3,800</td>
-  <td data-label="SD Waste" class="">150</td><td data-label="Bao Waste" class="">50</td>
-  <td data-label="SD Packed">64,320</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-05-11</td><td data-label="Wk">20</td><td data-label="SD Prod">48,960</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">90</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">33,060</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-05-07</td><td data-label="Wk">19</td><td data-label="SD Prod">103,600</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">320</td><td data-label="Bao Waste" class="">30</td>
-  <td data-label="SD Packed">0</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-05-06</td><td data-label="Wk">19</td><td data-label="SD Prod">72,000</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">26</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">73,740</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-05-05</td><td data-label="Wk">19</td><td data-label="SD Prod">50,400</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">280</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">108,840</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-05-04</td><td data-label="Wk">19</td><td data-label="SD Prod">0</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="neg">982</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">52,920</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-30</td><td data-label="Wk">18</td><td data-label="SD Prod">90,270</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">360</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">90,270</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-29</td><td data-label="Wk">18</td><td data-label="SD Prod">75,960</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="neg">539</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">75,960</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-28</td><td data-label="Wk">18</td><td data-label="SD Prod">67,140</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">0</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-27</td><td data-label="Wk">18</td><td data-label="SD Prod">66,480</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">326</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">66,480</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-23</td><td data-label="Wk">17</td><td data-label="SD Prod">70,200</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">70,200</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-22</td><td data-label="Wk">17</td><td data-label="SD Prod">67,680</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">308</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">67,680</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-21</td><td data-label="Wk">17</td><td data-label="SD Prod">52,680</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">179</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">52,680</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-20</td><td data-label="Wk">17</td><td data-label="SD Prod">56,280</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">338</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">56,280</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-16</td><td data-label="Wk">16</td><td data-label="SD Prod">34,800</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">34,800</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-15</td><td data-label="Wk">16</td><td data-label="SD Prod">54,960</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="neg">1,516</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">54,960</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-14</td><td data-label="Wk">16</td><td data-label="SD Prod">57,960</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">190</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">57,960</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-13</td><td data-label="Wk">16</td><td data-label="SD Prod">42,240</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">42,240</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-09</td><td data-label="Wk">15</td><td data-label="SD Prod">46,020</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">46,020</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-08</td><td data-label="Wk">15</td><td data-label="SD Prod">47,220</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">47,220</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-07</td><td data-label="Wk">15</td><td data-label="SD Prod">46,380</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">46,380</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-06</td><td data-label="Wk">15</td><td data-label="SD Prod">32,220</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">32,220</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-02</td><td data-label="Wk">14</td><td data-label="SD Prod">34,080</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">34,080</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-04-01</td><td data-label="Wk">14</td><td data-label="SD Prod">52,620</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">52,620</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-03-31</td><td data-label="Wk">14</td><td data-label="SD Prod">33,480</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">33,480</td><td data-label="Bao Packed">0</td>
-</tr><tr>
-  <td data-label="Date">2026-03-30</td><td data-label="Wk">14</td><td data-label="SD Prod">34,860</td><td data-label="Bao Prod">0</td>
-  <td data-label="SD Waste" class="">0</td><td data-label="Bao Waste" class="">0</td>
-  <td data-label="SD Packed">34,860</td><td data-label="Bao Packed">0</td>
-</tr></tbody></table>
+      <table id="dailyTable"></table>
     </div>
   </div>
 
@@ -465,67 +172,21 @@
       <div class="card">
         <h3>SD — Plan vs Actual (weekly)</h3>
         <div class="cap">Packed lbs vs Ramp / Plant plan</div>
-        <canvas id="chartWeeklySD" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+        <canvas id="chartWeeklySD"></canvas>
       </div>
       <div class="card">
         <h3>Bao — Plan vs Actual (weekly)</h3>
         <div class="cap">Packed lbs vs Ramp / Plant plan</div>
-        <canvas id="chartWeeklyBao" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+        <canvas id="chartWeeklyBao"></canvas>
       </div>
     </div>
     <div class="section-title">Weekly waste %</div>
     <div class="card">
-      <canvas id="chartWeeklyWaste" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+      <canvas id="chartWeeklyWaste" height="80"></canvas>
     </div>
     <div class="section-title">Weekly detail</div>
     <div class="card table-scroll">
-      <table id="weeklyTable" class="stackable"><thead><tr><th>Week</th><th>Start</th><th>Period</th><th>SD Actual</th><th>SD vs Ramp</th><th>Bao Actual</th><th>Bao vs Ramp</th><th>SD Waste%</th><th>Bao Waste%</th></tr></thead>
-<tbody><tr><td data-label="Week">Week 28</td><td data-label="Start">2026-07-06</td><td data-label="Period">P7</td>
-    <td data-label="SD Actual">150,660</td><td data-label="SD vs Ramp" class="neg">-181,116</td>
-    <td data-label="Bao Actual">64,269</td><td data-label="Bao vs Ramp" class="neg">-302,526</td>
-    <td data-label="SD Waste%">14.9%</td><td data-label="Bao Waste%">9.1%</td></tr><tr><td data-label="Week">Week 27</td><td data-label="Start">2026-06-29</td><td data-label="Period">P6</td>
-    <td data-label="SD Actual">309,360</td><td data-label="SD vs Ramp" class="pos">+21,360</td>
-    <td data-label="Bao Actual">58,304</td><td data-label="Bao vs Ramp" class="neg">-199,096</td>
-    <td data-label="SD Waste%">6.4%</td><td data-label="Bao Waste%">9.7%</td></tr><tr><td data-label="Week">Week 26</td><td data-label="Start">2026-06-22</td><td data-label="Period">P6</td>
-    <td data-label="SD Actual">303,480</td><td data-label="SD vs Ramp" class="pos">+15,480</td>
-    <td data-label="Bao Actual">28,064</td><td data-label="Bao vs Ramp" class="neg">-229,336</td>
-    <td data-label="SD Waste%">4.2%</td><td data-label="Bao Waste%">27.0%</td></tr><tr><td data-label="Week">Week 25</td><td data-label="Start">2026-06-15</td><td data-label="Period">P6</td>
-    <td data-label="SD Actual">291,072</td><td data-label="SD vs Ramp" class="pos">+3,072</td>
-    <td data-label="Bao Actual">28,482</td><td data-label="Bao vs Ramp" class="neg">-228,918</td>
-    <td data-label="SD Waste%">3.9%</td><td data-label="Bao Waste%">3.1%</td></tr><tr><td data-label="Week">Week 24</td><td data-label="Start">2026-06-08</td><td data-label="Period">P6</td>
-    <td data-label="SD Actual">198,060</td><td data-label="SD vs Ramp" class="neg">-89,940</td>
-    <td data-label="Bao Actual">13,888</td><td data-label="Bao vs Ramp" class="neg">-243,512</td>
-    <td data-label="SD Waste%">6.5%</td><td data-label="Bao Waste%">5.0%</td></tr><tr><td data-label="Week">Week 23</td><td data-label="Start">2026-06-01</td><td data-label="Period">P6</td>
-    <td data-label="SD Actual">297,780</td><td data-label="SD vs Ramp" class="pos">+9,780</td>
-    <td data-label="Bao Actual">16,166</td><td data-label="Bao vs Ramp" class="neg">-241,234</td>
-    <td data-label="SD Waste%">4.3%</td><td data-label="Bao Waste%">13.1%</td></tr><tr><td data-label="Week">Week 22</td><td data-label="Start">2026-05-25</td><td data-label="Period">P5</td>
-    <td data-label="SD Actual">179,340</td><td data-label="SD vs Ramp" class="pos">+35,340</td>
-    <td data-label="Bao Actual">8,528</td><td data-label="Bao vs Ramp" class="neg">-95,422</td>
-    <td data-label="SD Waste%">6.8%</td><td data-label="Bao Waste%">8.3%</td></tr><tr><td data-label="Week">Week 21</td><td data-label="Start">2026-05-18</td><td data-label="Period">P5</td>
-    <td data-label="SD Actual">156,840</td><td data-label="SD vs Ramp" class="pos">+12,840</td>
-    <td data-label="Bao Actual">26,624</td><td data-label="Bao vs Ramp" class="neg">-77,326</td>
-    <td data-label="SD Waste%">2.0%</td><td data-label="Bao Waste%">14.9%</td></tr><tr><td data-label="Week">Week 20</td><td data-label="Start">2026-05-11</td><td data-label="Period">P5</td>
-    <td data-label="SD Actual">229,320</td><td data-label="SD vs Ramp" class="pos">+85,320</td>
-    <td data-label="Bao Actual">0</td><td data-label="Bao vs Ramp" class="neg">-103,950</td>
-    <td data-label="SD Waste%">7.7%</td><td data-label="Bao Waste%">4.3%</td></tr><tr><td data-label="Week">Week 19</td><td data-label="Start">2026-05-04</td><td data-label="Period">P5</td>
-    <td data-label="SD Actual">235,500</td><td data-label="SD vs Ramp" class="pos">+91,500</td>
-    <td data-label="Bao Actual">0</td><td data-label="Bao vs Ramp" class="neg">-103,950</td>
-    <td data-label="SD Waste%">11.2%</td><td data-label="Bao Waste%">—</td></tr><tr><td data-label="Week">Week 18</td><td data-label="Start">2026-04-27</td><td data-label="Period">P4</td>
-    <td data-label="SD Actual">232,710</td><td data-label="SD vs Ramp" class="pos">+186,630</td>
-    <td data-label="Bao Actual">0</td><td data-label="Bao vs Ramp" class="neg">-47,520</td>
-    <td data-label="SD Waste%">6.5%</td><td data-label="Bao Waste%">—</td></tr><tr><td data-label="Week">Week 17</td><td data-label="Start">2026-04-20</td><td data-label="Period">P4</td>
-    <td data-label="SD Actual">246,840</td><td data-label="SD vs Ramp" class="pos">+200,760</td>
-    <td data-label="Bao Actual">0</td><td data-label="Bao vs Ramp" class="neg">-47,520</td>
-    <td data-label="SD Waste%">5.3%</td><td data-label="Bao Waste%">—</td></tr><tr><td data-label="Week">Week 16</td><td data-label="Start">2026-04-13</td><td data-label="Period">P4</td>
-    <td data-label="SD Actual">189,960</td><td data-label="SD vs Ramp" class="pos">+143,880</td>
-    <td data-label="Bao Actual">0</td><td data-label="Bao vs Ramp" class="neg">-47,520</td>
-    <td data-label="SD Waste%">14.2%</td><td data-label="Bao Waste%">—</td></tr><tr><td data-label="Week">Week 15</td><td data-label="Start">2026-04-06</td><td data-label="Period">P4</td>
-    <td data-label="SD Actual">171,840</td><td data-label="SD vs Ramp" class="pos">+125,760</td>
-    <td data-label="Bao Actual">0</td><td data-label="Bao vs Ramp" class="neg">-47,520</td>
-    <td data-label="SD Waste%">0.0%</td><td data-label="Bao Waste%">—</td></tr><tr><td data-label="Week">Week 14</td><td data-label="Start">2026-03-30</td><td data-label="Period">P3</td>
-    <td data-label="SD Actual">155,040</td><td data-label="SD vs Ramp" class="pos">+155,040</td>
-    <td data-label="Bao Actual">0</td><td data-label="Bao vs Ramp" class="pos">+0</td>
-    <td data-label="SD Waste%">0.0%</td><td data-label="Bao Waste%">—</td></tr></tbody></table>
+      <table id="weeklyTable"></table>
     </div>
   </div>
 
@@ -535,34 +196,21 @@
       <div class="card">
         <h3>SD — Plan vs Actual by Period</h3>
         <div class="cap">* = period still in progress</div>
-        <canvas id="chartMonthlySD" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+        <canvas id="chartMonthlySD"></canvas>
       </div>
       <div class="card">
         <h3>Bao — Plan vs Actual by Period</h3>
         <div class="cap">* = period still in progress</div>
-        <canvas id="chartMonthlyBao" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+        <canvas id="chartMonthlyBao"></canvas>
       </div>
     </div>
     <div class="section-title">Monthly waste %</div>
     <div class="card">
-      <canvas id="chartMonthlyWaste" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+      <canvas id="chartMonthlyWaste" height="80"></canvas>
     </div>
     <div class="section-title">Monthly detail</div>
     <div class="card table-scroll">
-      <table id="monthlyTable" class="stackable"><thead><tr><th>Period</th><th>SD Ramp</th><th>SD Actual</th><th>SD Diff</th><th>SD Waste%</th><th>Bao Ramp</th><th>Bao Actual</th><th>Bao Diff</th><th>Bao Waste%</th></tr></thead>
-<tbody><tr><td data-label="Period">P4</td><td data-label="SD Ramp">184,320</td><td data-label="SD Actual">928,050</td>
-   <td data-label="SD Diff" class="pos">+743,730</td><td data-label="SD Waste%">6.0%</td>
-   <td data-label="Bao Ramp">190,080</td><td data-label="Bao Actual">0</td>
-   <td data-label="Bao Diff" class="neg">-190,080</td><td data-label="Bao Waste%">—</td></tr><tr><td data-label="Period">P5</td><td data-label="SD Ramp">576,000</td><td data-label="SD Actual">801,000</td>
-   <td data-label="SD Diff" class="pos">+225,000</td><td data-label="SD Waste%">6.9%</td>
-   <td data-label="Bao Ramp">415,800</td><td data-label="Bao Actual">35,152</td>
-   <td data-label="Bao Diff" class="neg">-380,648</td><td data-label="Bao Waste%">11.3%</td></tr><tr><td data-label="Period">P6</td><td data-label="SD Ramp">1,152,000</td><td data-label="SD Actual">1,241,652</td>
-   <td data-label="SD Diff" class="pos">+89,652</td><td data-label="SD Waste%">5.0%</td>
-   <td data-label="Bao Ramp">1,287,000</td><td data-label="Bao Actual">116,008</td>
-   <td data-label="Bao Diff" class="neg">-1,170,992</td><td data-label="Bao Waste%">16.0%</td></tr><tr><td data-label="Period">P7</td><td data-label="SD Ramp">1,658,880</td><td data-label="SD Actual">308,760</td>
-   <td data-label="SD Diff" class="neg">-1,350,120</td><td data-label="SD Waste%">11.1%</td>
-   <td data-label="Bao Ramp">1,833,975</td><td data-label="Bao Actual">93,165</td>
-   <td data-label="Bao Diff" class="neg">-1,740,810</td><td data-label="Bao Waste%">7.6%</td></tr></tbody></table>
+      <table id="monthlyTable"></table>
     </div>
   </div>
 
@@ -572,12 +220,12 @@
       <div class="card">
         <h3>Finished Goods on Hand</h3>
         <div class="cap">End-of-week, by SKU</div>
-        <canvas id="chartFGOH" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+        <canvas id="chartFGOH"></canvas>
       </div>
       <div class="card">
         <h3>Left to Pack (EOW)</h3>
         <div class="cap">Unpacked inventory backlog, by SKU</div>
-        <canvas id="chartLTP" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+        <canvas id="chartLTP"></canvas>
       </div>
     </div>
   </div>
@@ -644,6 +292,7 @@ document.querySelectorAll('.tab').forEach(btn=>{
 
 // ---------- chart defaults ----------
 Chart.defaults.color = '#9AA3AD';
+Chart.defaults.animation = false;
 Chart.defaults.font.family = "'IBM Plex Mono', monospace";
 Chart.defaults.font.size = 11;
 const gridColor = '#2C333C';
@@ -917,6 +566,5 @@ new Chart(document.getElementById('chartLTP'), {
 
 // (mobile table stacking is handled by CSS + data-label attrs set below)
 </script>
-
-
-</body></html>
+</body>
+</html>
