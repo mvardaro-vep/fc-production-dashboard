@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>FC Production Tracker — Dashboard</title>
+<title>FC Production Metrics — Dashboard</title>
 <script>
 /*!
  * Chart.js v4.4.0
@@ -123,7 +123,7 @@
   <div class="hdr">
     <div class="hdr-left">
       <div class="eyebrow">Production Ops</div>
-      <h1>FC Production Tracker</h1>
+      <h1>FC Production Metrics</h1>
     </div>
     <div class="hdr-right">
       <div><span class="dot"></span><span class="asof" id="asof">—</span></div>
@@ -334,11 +334,20 @@ function paceStatus(p, rampVal){
 const sdPace = paceStatus(sdPacePct, sdProratedRamp);
 const baoPace = paceStatus(baoPacePct, baoProratedRamp);
 
+const WASTE_GOAL_PCT = 5;
+function wasteGoalSub(wastePct){
+  const diff = (wastePct*100) - WASTE_GOAL_PCT;
+  if(diff <= 0) return {label: 'Goal: '+WASTE_GOAL_PCT+'% — On Target', cls:'pos'};
+  return {label: 'Goal: '+WASTE_GOAL_PCT+'% — '+diff.toFixed(1)+'pt over', cls:'neg'};
+}
+const baoWasteGoal = wasteGoalSub(wtdBaoWastePct);
+const sdWasteGoal = wasteGoalSub(wtdSDWastePct);
+
 const kpis = [
   {cls:'bao', label:'WTD Bao Packed (Each)', val: fmt(wtdBao), sub: baoPace.label || 'Week '+lastRow.week, subClass: baoPace.cls},
-  {cls:'bao', label:'WTD Bao Waste %', val: pct(wtdBaoWastePct), sub: 'Week '+lastRow.week},
+  {cls:'bao', label:'WTD Bao Waste %', val: pct(wtdBaoWastePct), sub: baoWasteGoal.label, subClass: baoWasteGoal.cls},
   {cls:'sd', label:'WTD SD Packed (Each)', val: fmt(wtdSD), sub: sdPace.label || 'Week '+lastRow.week, subClass: sdPace.cls},
-  {cls:'sd', label:'WTD SD Waste %', val: pct(wtdSDWastePct), sub: 'Week '+lastRow.week}
+  {cls:'sd', label:'WTD SD Waste %', val: pct(wtdSDWastePct), sub: sdWasteGoal.label, subClass: sdWasteGoal.cls}
 ];
 
 const kpiStrip = document.getElementById('kpiStrip');
@@ -390,6 +399,27 @@ Chart.register({
       ctx.font = "600 9px 'IBM Plex Mono', monospace";
       ctx.textAlign = 'right';
       ctx.fillText(dataset.avgLineLabel || 'Avg', chartArea.right - 3, y - 4);
+      ctx.restore();
+    });
+    // Goal line — solid, distinct from the dashed Avg line, drawn per-dataset
+    // via a `goalLine` value (e.g. a fixed waste % target).
+    chart.data.datasets.forEach((dataset)=>{
+      if(dataset.goalLine === null || dataset.goalLine === undefined) return;
+      const scale = scales[dataset.yAxisID || 'y'];
+      const y = scale.getPixelForValue(dataset.goalLine);
+      if(y < chartArea.top || y > chartArea.bottom) return;
+      const color = dataset.goalLineColor || '#E5484D';
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(chartArea.left, y);
+      ctx.lineTo(chartArea.right, y);
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.font = "600 9px 'IBM Plex Mono', monospace";
+      ctx.textAlign = 'left';
+      ctx.fillText(dataset.goalLineLabel || 'Goal', chartArea.left + 3, y - 4);
       ctx.restore();
     });
   }
@@ -506,7 +536,7 @@ new Chart(document.getElementById('chartDailyWasteSD'), {
     datasets:[
       {label:'SD Waste %', data: sdWastePctSeries, type:'bar',
        backgroundColor:'#4FC1B0', yAxisID:'y',
-       avgLine: sdWastePctAvg, avgLineColor:'#4FC1B0'},
+       avgLine: sdWastePctAvg, avgLineColor:'#4FC1B0', goalLine:5},
       {label:'SD Waste (lbs)', data: sdWasteLbsSeries, type:'bar',
        backgroundColor:'#7C8790', yAxisID:'y1',
        avgLine: sdWasteLbsAvg, avgLineColor:'#7C8790', avgLineLabel:'Avg (lbs)'}
@@ -532,7 +562,7 @@ new Chart(document.getElementById('chartDailyWasteBao'), {
     datasets:[
       {label:'Bao Waste %', data: baoWastePctSeries, type:'bar',
        backgroundColor:'#E8A33D', yAxisID:'y',
-       avgLine: baoWastePctAvg, avgLineColor:'#E8A33D'},
+       avgLine: baoWastePctAvg, avgLineColor:'#E8A33D', goalLine:5},
       {label:'Bao Waste (lbs)', data: baoWasteLbsSeries, type:'bar',
        backgroundColor:'#7C8790', yAxisID:'y1',
        avgLine: baoWasteLbsAvg, avgLineColor:'#7C8790', avgLineLabel:'Avg (lbs)'}
@@ -617,7 +647,7 @@ new Chart(document.getElementById('chartWeeklyWasteSD'), {
   type:'bar',
   data:{labels:wkLabels, datasets:[
     {label:'SD Waste %', data:weeklySDWastePct, type:'bar', backgroundColor:'#4FC1B0', yAxisID:'y',
-     avgLine: avgOfWk(weeklySDWastePct), avgLineColor:'#4FC1B0'},
+     avgLine: avgOfWk(weeklySDWastePct), avgLineColor:'#4FC1B0', goalLine:5},
     {label:'SD Waste (lbs)', data:weeklySDWasteLbs, type:'bar', backgroundColor:'#7C8790', yAxisID:'y1',
      avgLine: avgOfWk(weeklySDWasteLbs), avgLineColor:'#7C8790', avgLineLabel:'Avg (lbs)'}
   ]},
@@ -632,7 +662,7 @@ new Chart(document.getElementById('chartWeeklyWasteBao'), {
   type:'bar',
   data:{labels:wkLabels, datasets:[
     {label:'Bao Waste %', data:weeklyBaoWastePct, type:'bar', backgroundColor:'#E8A33D', yAxisID:'y',
-     avgLine: avgOfWk(weeklyBaoWastePct), avgLineColor:'#E8A33D'},
+     avgLine: avgOfWk(weeklyBaoWastePct), avgLineColor:'#E8A33D', goalLine:5},
     {label:'Bao Waste (lbs)', data:weeklyBaoWasteLbs, type:'bar', backgroundColor:'#B8A94A', yAxisID:'y1',
      avgLine: avgOfWk(weeklyBaoWasteLbs), avgLineColor:'#B8A94A', avgLineLabel:'Avg (lbs)'}
   ]},
@@ -699,7 +729,7 @@ const monthlyBaoWasteLbs = mo.periods.map(p => sumWasteForPeriod(p,'bao_waste_lb
 new Chart(document.getElementById('chartMonthlyWasteSD'), {
   type:'bar',
   data:{labels:moLabels, datasets:[
-    {label:'SD Waste %', data: mo.sd.waste_pct.map(v=>v===null?null:v*100), backgroundColor: monthlyBarColors('#4FC1B0','rgba(79,193,176,.35)'), avgLine: avgOf4(mo.sd.waste_pct.map(v=>v===null?null:v*100)), avgLineColor:'#4FC1B0', yAxisID:'y'},
+    {label:'SD Waste %', data: mo.sd.waste_pct.map(v=>v===null?null:v*100), backgroundColor: monthlyBarColors('#4FC1B0','rgba(79,193,176,.35)'), avgLine: avgOf4(mo.sd.waste_pct.map(v=>v===null?null:v*100)), avgLineColor:'#4FC1B0', yAxisID:'y', goalLine:5},
     {label:'SD Waste (lbs)', data: monthlySDWasteLbs, type:'bar', backgroundColor:'#7C8790', yAxisID:'y1',
      avgLine: avgOf4(monthlySDWasteLbs), avgLineColor:'#7C8790', avgLineLabel:'Avg (lbs)'}
   ]},
@@ -713,7 +743,7 @@ new Chart(document.getElementById('chartMonthlyWasteSD'), {
 new Chart(document.getElementById('chartMonthlyWasteBao'), {
   type:'bar',
   data:{labels:moLabels, datasets:[
-    {label:'Bao Waste %', data: mo.bao.waste_pct.map(v=>v===null?null:v*100), backgroundColor: monthlyBarColors('#E8A33D','rgba(232,163,61,.35)'), avgLine: avgOf4(mo.bao.waste_pct.map(v=>v===null?null:v*100)), avgLineColor:'#E8A33D', yAxisID:'y'},
+    {label:'Bao Waste %', data: mo.bao.waste_pct.map(v=>v===null?null:v*100), backgroundColor: monthlyBarColors('#E8A33D','rgba(232,163,61,.35)'), avgLine: avgOf4(mo.bao.waste_pct.map(v=>v===null?null:v*100)), avgLineColor:'#E8A33D', yAxisID:'y', goalLine:5},
     {label:'Bao Waste (lbs)', data: monthlyBaoWasteLbs, type:'bar', backgroundColor:'#B8A94A', yAxisID:'y1',
      avgLine: avgOf4(monthlyBaoWasteLbs), avgLineColor:'#B8A94A', avgLineLabel:'Avg (lbs)'}
   ]},
