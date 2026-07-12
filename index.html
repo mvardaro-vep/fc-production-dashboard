@@ -146,25 +146,25 @@
   <div class="panel-section active" id="tab-daily">
     <div class="grid2">
       <div class="card">
-        <h3>SD — Daily Output</h3>
-        <div class="cap">Packed Each, most recent 14 calendar days — dimmed dates = day off. Hover/tap a bar, or see the table below, for exact values.</div>
-        <canvas id="chartDailySD"></canvas>
-      </div>
-      <div class="card">
         <h3>Bao — Daily Output</h3>
         <div class="cap">Packed Each, most recent 14 calendar days — dimmed dates = day off. Hover/tap a bar, or see the table below, for exact values.</div>
         <canvas id="chartDailyBao"></canvas>
+      </div>
+      <div class="card">
+        <h3>SD — Daily Output</h3>
+        <div class="cap">Packed Each, most recent 14 calendar days — dimmed dates = day off. Hover/tap a bar, or see the table below, for exact values.</div>
+        <canvas id="chartDailySD"></canvas>
       </div>
     </div>
     <div class="section-title">Daily waste</div>
     <div class="grid2">
       <div class="card">
-        <h3>SD Waste %</h3>
-        <canvas id="chartDailyWasteSD" height="140"></canvas>
-      </div>
-      <div class="card">
         <h3>Bao Waste %</h3>
         <canvas id="chartDailyWasteBao" height="140"></canvas>
+      </div>
+      <div class="card">
+        <h3>SD Waste %</h3>
+        <canvas id="chartDailyWasteSD" height="140"></canvas>
       </div>
     </div>
     <div class="section-title">Daily log</div>
@@ -175,27 +175,28 @@
 
   <!-- WEEKLY -->
   <div class="panel-section" id="tab-weekly">
+    <div class="section-title">Bao</div>
     <div class="grid2">
       <div class="card">
-        <h3>SD — Plan vs Actual (weekly)</h3>
-        <div class="cap">Packed Each vs Ramp / Plant plan</div>
-        <canvas id="chartWeeklySD"></canvas>
-      </div>
-      <div class="card">
-        <h3>Bao — Plan vs Actual (weekly)</h3>
+        <h3>Bao Plan vs Actual (weekly)</h3>
         <div class="cap">Packed Each vs Ramp / Plant plan</div>
         <canvas id="chartWeeklyBao"></canvas>
-      </div>
-    </div>
-    <div class="section-title">Weekly waste %</div>
-    <div class="grid2">
-      <div class="card">
-        <h3>SD Waste %</h3>
-        <canvas id="chartWeeklyWasteSD"></canvas>
       </div>
       <div class="card">
         <h3>Bao Waste %</h3>
         <canvas id="chartWeeklyWasteBao"></canvas>
+      </div>
+    </div>
+    <div class="section-title" style="margin-top:26px;">SD</div>
+    <div class="grid2">
+      <div class="card">
+        <h3>SD Plan vs Actual (weekly)</h3>
+        <div class="cap">Packed Each vs Ramp / Plant plan</div>
+        <canvas id="chartWeeklySD"></canvas>
+      </div>
+      <div class="card">
+        <h3>SD Waste %</h3>
+        <canvas id="chartWeeklyWasteSD"></canvas>
       </div>
     </div>
     <div class="section-title">Weekly detail</div>
@@ -206,27 +207,28 @@
 
   <!-- MONTHLY -->
   <div class="panel-section" id="tab-monthly">
+    <div class="section-title">Bao</div>
     <div class="grid2">
       <div class="card">
-        <h3>SD — Plan vs Actual by Period</h3>
-        <div class="cap">* = period still in progress</div>
-        <canvas id="chartMonthlySD"></canvas>
-      </div>
-      <div class="card">
-        <h3>Bao — Plan vs Actual by Period</h3>
+        <h3>Bao Plan vs Actual by Period</h3>
         <div class="cap">* = period still in progress</div>
         <canvas id="chartMonthlyBao"></canvas>
-      </div>
-    </div>
-    <div class="section-title">Monthly waste %</div>
-    <div class="grid2">
-      <div class="card">
-        <h3>SD Waste %</h3>
-        <canvas id="chartMonthlyWasteSD"></canvas>
       </div>
       <div class="card">
         <h3>Bao Waste %</h3>
         <canvas id="chartMonthlyWasteBao"></canvas>
+      </div>
+    </div>
+    <div class="section-title" style="margin-top:26px;">SD</div>
+    <div class="grid2">
+      <div class="card">
+        <h3>SD Plan vs Actual by Period</h3>
+        <div class="cap">* = period still in progress</div>
+        <canvas id="chartMonthlySD"></canvas>
+      </div>
+      <div class="card">
+        <h3>SD Waste %</h3>
+        <canvas id="chartMonthlyWasteSD"></canvas>
       </div>
     </div>
     <div class="section-title">Monthly detail</div>
@@ -294,19 +296,49 @@ function sum(arr, key){ return arr.reduce((a,d)=>a+(d[key]||0),0); }
 
 const wtdSD = sum(wtd,'sd_packed');
 const wtdBao = sum(wtd,'bao_packed');
-const mtdRows = daily.filter(d => d.month === daily[daily.length-1].month);
-const mtdWaste = sum(mtdRows,'sd_waste_lbs') + sum(mtdRows,'bao_waste_lbs');
-const mtdProduced = sum(mtdRows,'sd_produced') + sum(mtdRows,'bao_produced');
-const mtdWastePct = mtdProduced>0 ? mtdWaste/mtdProduced : 0;
+const wtdSDWasteLbs = sum(wtd,'sd_waste_lbs');
+const wtdSDProdLbs = sum(wtd,'sd_good_lbs_prod');
+const wtdSDWastePct = wtdSDProdLbs>0 ? wtdSDWasteLbs/wtdSDProdLbs : 0;
+
+const wtdBaoWasteLbs = sum(wtd,'bao_waste_lbs');
+const wtdBaoProdLbs = sum(wtd,'bao_good_lbs_prod');
+const wtdBaoWastePct = wtdBaoProdLbs>0 ? wtdBaoWasteLbs/wtdBaoProdLbs : 0;
 
 const lastRow = daily[daily.length-1];
 const priorRow = daily[daily.length-2] || {};
 
+// "On track" pace vs Ramp Plan, prorated by how far into a Mon–Fri work week we are.
+// (Assumes a 5-day work week — let us know if that's wrong and this can be adjusted.)
+const wkDataEarly = DATA.weekly;
+const curWeekIdx = wkDataEarly.weeks.indexOf(lastRow.week);
+const asOfDate = new Date(lastRow.date + 'T00:00:00');
+const dow = asOfDate.getDay(); // 0=Sun ... 6=Sat
+const workDayIndex = (dow===0 || dow===6) ? 5 : dow; // weekend = treat as full week elapsed
+const weekFraction = Math.min(workDayIndex,5)/5;
+
+const sdRampThisWeek = curWeekIdx>=0 ? wkDataEarly.sd.ramp_plan[curWeekIdx] : null;
+const baoRampThisWeek = curWeekIdx>=0 ? wkDataEarly.bao.ramp_plan[curWeekIdx] : null;
+const sdProratedRamp = (sdRampThisWeek!==null && sdRampThisWeek!==undefined) ? sdRampThisWeek*weekFraction : null;
+const baoProratedRamp = (baoRampThisWeek!==null && baoRampThisWeek!==undefined) ? baoRampThisWeek*weekFraction : null;
+
+const sdPacePct = (sdProratedRamp && sdProratedRamp>0) ? (wtdSD/sdProratedRamp*100) : null;
+const baoPacePct = (baoProratedRamp && baoProratedRamp>0) ? (wtdBao/baoProratedRamp*100) : null;
+
+function paceStatus(p, rampVal){
+  if(p===null || p===undefined || isNaN(p)) return {label:'', cls:''};
+  const rampStr = (rampVal===null||rampVal===undefined) ? '' : Math.round(rampVal).toLocaleString('en-US');
+  const achieved = Math.round(p);
+  const cls = p >= 100 ? 'pos' : (p >= 90 ? '' : 'neg');
+  return {label: achieved+'% of '+rampStr+' Ramp Plan achieved', cls: cls};
+}
+const sdPace = paceStatus(sdPacePct, sdProratedRamp);
+const baoPace = paceStatus(baoPacePct, baoProratedRamp);
+
 const kpis = [
-  {cls:'sd', label:'WTD SD Packed (Each)', val: fmt(wtdSD), sub: 'Week '+lastRow.week},
-  {cls:'bao', label:'WTD Bao Packed (Each)', val: fmt(wtdBao), sub: 'Week '+lastRow.week},
-  {cls:'warn', label:'MTD Waste %', val: pct(mtdWastePct), sub: lastRow.month},
-  {cls:'neutral', label:'Last Day Produced (SD+Bao)', val: fmt(lastRow.sd_produced+lastRow.bao_produced), sub: lastRow.date}
+  {cls:'bao', label:'WTD Bao Packed (Each)', val: fmt(wtdBao), sub: baoPace.label || 'Week '+lastRow.week, subClass: baoPace.cls},
+  {cls:'bao', label:'WTD Bao Waste %', val: pct(wtdBaoWastePct), sub: 'Week '+lastRow.week},
+  {cls:'sd', label:'WTD SD Packed (Each)', val: fmt(wtdSD), sub: sdPace.label || 'Week '+lastRow.week, subClass: sdPace.cls},
+  {cls:'sd', label:'WTD SD Waste %', val: pct(wtdSDWastePct), sub: 'Week '+lastRow.week}
 ];
 
 const kpiStrip = document.getElementById('kpiStrip');
@@ -314,7 +346,7 @@ kpiStrip.innerHTML = kpis.map(k=>`
   <div class="kpi ${k.cls}">
     <div class="label">${k.label}</div>
     <div class="val">${k.val}</div>
-    <div class="sub">${k.sub}</div>
+    <div class="sub ${k.subClass||''}">${k.sub}</div>
   </div>
 `).join('');
 
@@ -518,11 +550,11 @@ new Chart(document.getElementById('chartDailyWasteBao'), {
 // daily table
 const dailyTbl = document.getElementById('dailyTable');
 dailyTbl.className = 'stackable';
-dailyTbl.innerHTML = `<thead><tr><th>Date</th><th>Wk</th><th>SD Prod</th><th>Bao Prod</th><th>SD Waste</th><th>Bao Waste</th><th>SD Packed</th><th>Bao Packed</th></tr></thead>
+dailyTbl.innerHTML = `<thead><tr><th>Date</th><th>Wk</th><th>Bao Prod</th><th>Bao Waste</th><th>Bao Packed</th><th>SD Prod</th><th>SD Waste</th><th>SD Packed</th></tr></thead>
 <tbody>${daily.filter(d=>d.worked).slice().reverse().map(d=>`<tr>
-  <td data-label="Date">${d.date}</td><td data-label="Wk">${d.week}</td><td data-label="SD Prod">${fmt(d.sd_produced)}</td><td data-label="Bao Prod">${fmt(d.bao_produced)}</td>
-  <td data-label="SD Waste" class="${d.sd_waste_lbs>500?'neg':''}">${fmt(d.sd_waste_lbs)}</td><td data-label="Bao Waste" class="${d.bao_waste_lbs>300?'neg':''}">${fmt(d.bao_waste_lbs)}</td>
-  <td data-label="SD Packed">${fmt(d.sd_packed)}</td><td data-label="Bao Packed">${fmt(d.bao_packed)}</td>
+  <td data-label="Date">${d.date}</td><td data-label="Wk">${d.week}</td>
+  <td data-label="Bao Prod">${fmt(d.bao_produced)}</td><td data-label="Bao Waste" class="${d.bao_waste_lbs>300?'neg':''}">${fmt(d.bao_waste_lbs)}</td><td data-label="Bao Packed">${fmt(d.bao_packed)}</td>
+  <td data-label="SD Prod">${fmt(d.sd_produced)}</td><td data-label="SD Waste" class="${d.sd_waste_lbs>500?'neg':''}">${fmt(d.sd_waste_lbs)}</td><td data-label="SD Packed">${fmt(d.sd_packed)}</td>
 </tr>`).join('')}</tbody>`;
 
 // WEEKLY
@@ -613,14 +645,14 @@ new Chart(document.getElementById('chartWeeklyWasteBao'), {
 
 const weeklyTbl = document.getElementById('weeklyTable');
 weeklyTbl.className = 'stackable';
-weeklyTbl.innerHTML = `<thead><tr><th>Week</th><th>Start</th><th>Period</th><th>SD Actual</th><th>SD vs Ramp</th><th>Bao Actual</th><th>Bao vs Ramp</th><th>SD Waste%</th><th>Bao Waste%</th></tr></thead>
+weeklyTbl.innerHTML = `<thead><tr><th>Week</th><th>Start</th><th>Period</th><th>Bao Actual</th><th>Bao vs Ramp</th><th>SD Actual</th><th>SD vs Ramp</th><th>Bao Waste%</th><th>SD Waste%</th></tr></thead>
 <tbody>${wk.weeks.map((w,i)=>{
   const sdDiff = wk.sd.output_packed[i]-wk.sd.ramp_plan[i];
   const baoDiff = wk.bao.output_packed[i]-wk.bao.ramp_plan[i];
   return `<tr><td data-label="Week">Week ${w}</td><td data-label="Start">${wk.week_start[i]}</td><td data-label="Period">${wk.period[i]}</td>
-    <td data-label="SD Actual">${fmt(wk.sd.output_packed[i])}</td><td data-label="SD vs Ramp" class="${sdDiff<0?'neg':'pos'}">${sdDiff>=0?'+':''}${fmt(sdDiff)}</td>
     <td data-label="Bao Actual">${fmt(wk.bao.output_packed[i])}</td><td data-label="Bao vs Ramp" class="${baoDiff<0?'neg':'pos'}">${baoDiff>=0?'+':''}${fmt(baoDiff)}</td>
-    <td data-label="SD Waste%">${pct(wk.sd.waste_pct[i])}</td><td data-label="Bao Waste%">${pct(wk.bao.waste_pct[i])}</td></tr>`;
+    <td data-label="SD Actual">${fmt(wk.sd.output_packed[i])}</td><td data-label="SD vs Ramp" class="${sdDiff<0?'neg':'pos'}">${sdDiff>=0?'+':''}${fmt(sdDiff)}</td>
+    <td data-label="Bao Waste%">${pct(wk.bao.waste_pct[i])}</td><td data-label="SD Waste%">${pct(wk.sd.waste_pct[i])}</td></tr>`;
 }).reverse().join('')}</tbody>`;
 
 // MONTHLY
@@ -694,14 +726,15 @@ new Chart(document.getElementById('chartMonthlyWasteBao'), {
 
 const monthlyTbl = document.getElementById('monthlyTable');
 monthlyTbl.className = 'stackable';
-monthlyTbl.innerHTML = `<thead><tr><th>Period</th><th>SD Ramp</th><th>SD Actual</th><th>SD Diff</th><th>SD Waste%</th><th>Bao Ramp</th><th>Bao Actual</th><th>Bao Diff</th><th>Bao Waste%</th></tr></thead>
+monthlyTbl.innerHTML = `<thead><tr><th>Period</th><th>Bao Ramp</th><th>Bao Actual</th><th>Bao Diff</th><th>Bao Waste%</th><th>SD Ramp</th><th>SD Actual</th><th>SD Diff</th><th>SD Waste%</th></tr></thead>
 <tbody>${mo.periods.map((p,i)=>{
   const sdDiff = mo.sd.output_packed[i]-mo.sd.ramp_plan[i];
   const baoDiff = mo.bao.output_packed[i]-mo.bao.ramp_plan[i];
-  return `<tr><td data-label="Period">${p}</td><td data-label="SD Ramp">${fmt(mo.sd.ramp_plan[i])}</td><td data-label="SD Actual">${fmt(mo.sd.output_packed[i])}</td>
-   <td data-label="SD Diff" class="${sdDiff<0?'neg':'pos'}">${sdDiff>=0?'+':''}${fmt(sdDiff)}</td><td data-label="SD Waste%">${pct(mo.sd.waste_pct[i])}</td>
+  return `<tr><td data-label="Period">${p}</td>
    <td data-label="Bao Ramp">${fmt(mo.bao.ramp_plan[i])}</td><td data-label="Bao Actual">${fmt(mo.bao.output_packed[i])}</td>
-   <td data-label="Bao Diff" class="${baoDiff<0?'neg':'pos'}">${baoDiff>=0?'+':''}${fmt(baoDiff)}</td><td data-label="Bao Waste%">${pct(mo.bao.waste_pct[i])}</td></tr>`;
+   <td data-label="Bao Diff" class="${baoDiff<0?'neg':'pos'}">${baoDiff>=0?'+':''}${fmt(baoDiff)}</td><td data-label="Bao Waste%">${pct(mo.bao.waste_pct[i])}</td>
+   <td data-label="SD Ramp">${fmt(mo.sd.ramp_plan[i])}</td><td data-label="SD Actual">${fmt(mo.sd.output_packed[i])}</td>
+   <td data-label="SD Diff" class="${sdDiff<0?'neg':'pos'}">${sdDiff>=0?'+':''}${fmt(sdDiff)}</td><td data-label="SD Waste%">${pct(mo.sd.waste_pct[i])}</td></tr>`;
 }).join('')}</tbody>`;
 
 // INVENTORY
@@ -731,54 +764,64 @@ function buildInvChart(canvasId, data, color, label){
   });
 }
 
-function buildInvPairs(containerId){
+// FG on Hand and Left to Pack are matched by position, not name — the source
+// file labels the same SKU slightly differently between the two sections
+// (e.g. "CC SD" vs "Chili Crisp SD"), so we pair index-for-index, then sort
+// the pairs together: Bao SKUs first, alphabetical within each group. This
+// same sorted order is reused for both the charts and the detail table below.
+const invSortedPairs = (() => {
   const fgohNames = Object.keys(inv.fg_on_hand);
   const ltpNames = Object.keys(inv.left_to_pack);
+  const pairs = fgohNames.map((name,i)=>({fg:name, ltp:ltpNames[i], isBao: name.toLowerCase().includes('bao')}));
+  pairs.sort((a,b)=>{
+    if(a.isBao !== b.isBao) return a.isBao ? -1 : 1;
+    return a.fg.localeCompare(b.fg);
+  });
+  return pairs;
+})();
+
+function buildInvPairs(containerId){
+  const pairs = invSortedPairs;
   const container = document.getElementById(containerId);
 
-  // FG on Hand and Left to Pack are matched by position, not name — the source
-  // file labels the same SKU slightly differently between the two sections
-  // (e.g. "CC SD" vs "Chili Crisp SD"), so we pair index-for-index.
-  container.innerHTML = fgohNames.map((name,i)=>`
-    <div class="section-title" style="margin-top:${i===0?'0':'26px'};">${name}</div>
+  container.innerHTML = pairs.map((p,i)=>`
+    <div class="section-title" style="margin-top:${i===0?'0':'26px'};">${p.fg}</div>
     <div class="grid2">
       <div class="card">
-        <h3>${name} Finished Goods on Hand</h3>
+        <h3>${p.fg} Finished Goods on Hand</h3>
         <canvas id="fgoh_${i}"></canvas>
       </div>
       <div class="card">
-        <h3>${name} Left to Pack</h3>
+        <h3>${p.fg} Left to Pack</h3>
         <canvas id="ltp_${i}"></canvas>
       </div>
     </div>
   `).join('');
 
-  fgohNames.forEach((name,i)=>{
+  pairs.forEach((p,i)=>{
     const color = skuColors[i%skuColors.length];
-    buildInvChart(`fgoh_${i}`, inv.fg_on_hand[name], color, name);
-    buildInvChart(`ltp_${i}`, inv.left_to_pack[ltpNames[i]], color, ltpNames[i]);
+    buildInvChart(`fgoh_${i}`, inv.fg_on_hand[p.fg], color, p.fg);
+    buildInvChart(`ltp_${i}`, inv.left_to_pack[p.ltp], color, p.ltp);
   });
 }
 
 buildInvPairs('invPairsContainer');
 
 // Inventory detail table — one row per week, FG on hand + left to pack per SKU
-const fgohSkus = Object.keys(inv.fg_on_hand);
-const ltpSkus = Object.keys(inv.left_to_pack);
 const invFmt = v => (v===null||v===undefined||isNaN(v)) ? '—' : Math.round(v).toLocaleString('en-US');
 
 const inventoryTbl = document.getElementById('inventoryTable');
 inventoryTbl.className = 'stackable';
 inventoryTbl.innerHTML = `<thead><tr>
   <th>Week</th>
-  ${fgohSkus.map(s=>`<th>${s} OH</th>`).join('')}
-  ${ltpSkus.map(s=>`<th>${s} LTP</th>`).join('')}
+  ${invSortedPairs.map(p=>`<th>${p.fg} OH</th>`).join('')}
+  ${invSortedPairs.map(p=>`<th>${p.ltp} LTP</th>`).join('')}
 </tr></thead>
 <tbody>${inv.weeks.map((w,i)=>{
   return `<tr>
     <td data-label="Week">Wk ${w}</td>
-    ${fgohSkus.map(s=>`<td data-label="${s} OH">${invFmt(inv.fg_on_hand[s][i])}</td>`).join('')}
-    ${ltpSkus.map(s=>`<td data-label="${s} LTP">${invFmt(inv.left_to_pack[s][i])}</td>`).join('')}
+    ${invSortedPairs.map(p=>`<td data-label="${p.fg} OH">${invFmt(inv.fg_on_hand[p.fg][i])}</td>`).join('')}
+    ${invSortedPairs.map(p=>`<td data-label="${p.ltp} LTP">${invFmt(inv.left_to_pack[p.ltp][i])}</td>`).join('')}
   </tr>`;
 }).reverse().join('')}</tbody>`;
 
