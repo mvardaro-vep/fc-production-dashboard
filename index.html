@@ -237,11 +237,8 @@
 
   <!-- INVENTORY -->
   <div class="panel-section" id="tab-inventory">
-    <div class="section-title">Finished Goods on Hand (Packs) — end-of-week, by SKU</div>
-    <div class="grid2" id="fgohGrid"></div>
-
-    <div class="section-title">Left to Pack (EOW) (Packs) — unpacked backlog, by SKU</div>
-    <div class="grid2" id="ltpGrid"></div>
+    <div class="section-title">Finished Goods on Hand vs Left to Pack (Packs) — by SKU</div>
+    <div id="invPairsContainer"></div>
 
     <div class="section-title">Inventory detail</div>
     <div class="card table-scroll">
@@ -251,11 +248,8 @@
 
   <!-- OEE -->
   <div class="panel-section" id="tab-oee">
-    <div class="section-title">Machine Uptime (Hours) — by machine, tracked days only</div>
-    <div class="grid2" id="uptimeGrid"></div>
-
-    <div class="section-title">Overall OEE (%) — by machine, tracked days only</div>
-    <div class="grid2" id="oeeGrid"></div>
+    <div class="section-title">Uptime vs Overall OEE — by machine, tracked days only</div>
+    <div id="oeePairsContainer"></div>
 
     <div class="section-title">OEE detail</div>
     <div class="card table-scroll">
@@ -715,42 +709,58 @@ const inv = DATA.inventory;
 const invLabels = inv.weeks.map(w=>String(w));
 const skuColors = ['#4FC1B0','#E8A33D','#E5484D','#7C9CE8','#C77DFF','#9AA3AD'];
 
-function buildSkuGrid(containerId, dataObj, idPrefix){
-  const container = document.getElementById(containerId);
-  const skuNames = Object.keys(dataObj);
-  container.innerHTML = skuNames.map((name,i)=>`
-    <div class="card">
-      <h3>${name}</h3>
-      <canvas id="${idPrefix}_${i}"></canvas>
-    </div>
-  `).join('');
-  skuNames.forEach((name,i)=>{
-    const data = dataObj[name];
-    const avgVal = avgOfArr(data);
-    const color = skuColors[i%skuColors.length];
-    new Chart(document.getElementById(`${idPrefix}_${i}`), {
-      type:'bar',
-      data:{
-        labels: invLabels,
-        datasets:[{
-          label:name, data: data,
-          backgroundColor: color,
-          avgLine: avgVal
-        }]
-      },
-      options: baseOpts({
-        plugins:{legend:{display:false}},
-        scales:{
-          x:{grid:{color:gridColor}},
-          y:{grid:{color:gridColor}, beginAtZero:true, ticks:{callback:v=>Math.round(v).toLocaleString('en-US')}}
-        }
-      })
-    });
+function buildInvChart(canvasId, data, color, label){
+  const avgVal = avgOfArr(data);
+  new Chart(document.getElementById(canvasId), {
+    type:'bar',
+    data:{
+      labels: invLabels,
+      datasets:[{
+        label:label, data: data,
+        backgroundColor: color,
+        avgLine: avgVal
+      }]
+    },
+    options: baseOpts({
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:gridColor}},
+        y:{grid:{color:gridColor}, beginAtZero:true, ticks:{callback:v=>Math.round(v).toLocaleString('en-US')}}
+      }
+    })
   });
 }
 
-buildSkuGrid('fgohGrid', inv.fg_on_hand, 'fgoh');
-buildSkuGrid('ltpGrid', inv.left_to_pack, 'ltp');
+function buildInvPairs(containerId){
+  const fgohNames = Object.keys(inv.fg_on_hand);
+  const ltpNames = Object.keys(inv.left_to_pack);
+  const container = document.getElementById(containerId);
+
+  // FG on Hand and Left to Pack are matched by position, not name — the source
+  // file labels the same SKU slightly differently between the two sections
+  // (e.g. "CC SD" vs "Chili Crisp SD"), so we pair index-for-index.
+  container.innerHTML = fgohNames.map((name,i)=>`
+    <div class="section-title" style="margin-top:${i===0?'0':'26px'};">${name}</div>
+    <div class="grid2">
+      <div class="card">
+        <h3>${name} Finished Goods on Hand</h3>
+        <canvas id="fgoh_${i}"></canvas>
+      </div>
+      <div class="card">
+        <h3>${name} Left to Pack</h3>
+        <canvas id="ltp_${i}"></canvas>
+      </div>
+    </div>
+  `).join('');
+
+  fgohNames.forEach((name,i)=>{
+    const color = skuColors[i%skuColors.length];
+    buildInvChart(`fgoh_${i}`, inv.fg_on_hand[name], color, name);
+    buildInvChart(`ltp_${i}`, inv.left_to_pack[ltpNames[i]], color, ltpNames[i]);
+  });
+}
+
+buildInvPairs('invPairsContainer');
 
 // Inventory detail table — one row per week, FG on hand + left to pack per SKU
 const fgohSkus = Object.keys(inv.fg_on_hand);
@@ -781,43 +791,59 @@ function avgOfArr(vals){
   return clean.length ? clean.reduce((a,b)=>a+b,0)/clean.length : null;
 }
 
-function buildMachineGrid(containerId, records, idPrefix, formatter){
-  const windowed = records.slice(-OEE_WINDOW);
-  const dates = windowed.map(r => r.date.slice(5));
-  const container = document.getElementById(containerId);
-  container.innerHTML = oeeMod.machines.map((m,i)=>`
-    <div class="card">
-      <h3>${m}</h3>
-      <canvas id="${idPrefix}_${i}"></canvas>
-    </div>
-  `).join('');
-  oeeMod.machines.forEach((m,i)=>{
-    const data = windowed.map(r => (r[m]===undefined || r[m]===null || isNaN(r[m])) ? null : r[m]);
-    const avgVal = avgOfArr(data);
-    const color = skuColors[i%skuColors.length];
-    new Chart(document.getElementById(`${idPrefix}_${i}`), {
-      type:'bar',
-      data:{
-        labels: dates,
-        datasets:[{
-          label:m, data:data,
-          backgroundColor: color,
-          avgLine: avgVal
-        }]
-      },
-      options: baseOpts({
-        plugins:{legend:{display:false}},
-        scales:{
-          x:{grid:{color:gridColor}, ticks:{maxRotation:90, minRotation:90, autoSkip:false}},
-          y:{grid:{color:gridColor}, ticks:{callback: formatter}}
-        }
-      })
-    });
+function buildOeeMachineChart(canvasId, windowed, dates, metricKey, color, formatter){
+  const data = windowed.map(r => (r[metricKey]===undefined || r[metricKey]===null || isNaN(r[metricKey])) ? null : r[metricKey]);
+  const avgVal = avgOfArr(data);
+  new Chart(document.getElementById(canvasId), {
+    type:'bar',
+    data:{
+      labels: dates,
+      datasets:[{
+        label:metricKey, data:data,
+        backgroundColor: color,
+        avgLine: avgVal
+      }]
+    },
+    options: baseOpts({
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:gridColor}, ticks:{maxRotation:90, minRotation:90, autoSkip:false}},
+        y:{grid:{color:gridColor}, ticks:{callback: formatter}}
+      }
+    })
   });
 }
 
-buildMachineGrid('uptimeGrid', oeeMod.uptime, 'uptime', v => v.toFixed(1)+'h');
-buildMachineGrid('oeeGrid', oeeMod.oee, 'oeeChart', v => Math.round(v*100)+'%');
+function buildOeePairs(containerId, uptimeRecords, oeeRecords){
+  const uptimeWindowed = uptimeRecords.slice(-OEE_WINDOW);
+  const oeeWindowed = oeeRecords.slice(-OEE_WINDOW);
+  const dates = uptimeWindowed.map(r => r.date.slice(5));
+  const container = document.getElementById(containerId);
+  const fmtHrs = v => v.toFixed(1)+'h';
+  const fmtPct = v => Math.round(v*100)+'%';
+
+  container.innerHTML = oeeMod.machines.map((m,i)=>`
+    <div class="section-title" style="margin-top:${i===0?'0':'26px'};">${m}</div>
+    <div class="grid2">
+      <div class="card">
+        <h3>${m} Uptime (Hours)</h3>
+        <canvas id="uptime_${i}"></canvas>
+      </div>
+      <div class="card">
+        <h3>${m} Overall OEE (%)</h3>
+        <canvas id="oeeChart_${i}"></canvas>
+      </div>
+    </div>
+  `).join('');
+
+  oeeMod.machines.forEach((m,i)=>{
+    const color = skuColors[i%skuColors.length];
+    buildOeeMachineChart(`uptime_${i}`, uptimeWindowed, dates, m, color, fmtHrs);
+    buildOeeMachineChart(`oeeChart_${i}`, oeeWindowed, dates, m, color, fmtPct);
+  });
+}
+
+buildOeePairs('oeePairsContainer', oeeMod.uptime, oeeMod.oee);
 
 // OEE detail table — same 21-day window as the charts above,
 // uptime hours + overall OEE % per machine, most recent day first.
@@ -888,11 +914,11 @@ function buildMachinePairs(containerId, piecesRecords, wasteRecords){
     <div class="section-title" style="margin-top:${i===0?'0':'26px'};">${m}</div>
     <div class="grid2">
       <div class="card">
-        <h3>Pieces Formed</h3>
+        <h3>${m} Pieces Formed</h3>
         <canvas id="pieces_${i}"></canvas>
       </div>
       <div class="card">
-        <h3>Waste</h3>
+        <h3>${m} Waste</h3>
         <canvas id="machWaste_${i}"></canvas>
       </div>
     </div>
