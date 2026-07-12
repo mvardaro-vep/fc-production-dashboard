@@ -40,7 +40,7 @@
   *{box-sizing:border-box;}
   body{
     margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
-    -webkit-font-smoothing:antialiased;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
   }
   .wrap{max-width:1180px; margin:0 auto; padding:28px 24px 60px;}
 
@@ -67,8 +67,9 @@
   .kpi.neutral::before{background:var(--ink-dim);}
 
   /* TABS */
-  .tabs{display:flex; gap:4px; margin-bottom:18px; border-bottom:1px solid var(--line);}
-  .tab{font-family:var(--mono); font-size:12.5px; letter-spacing:.03em; color:var(--ink-dim); background:none; border:none; padding:10px 16px; cursor:pointer; border-bottom:2px solid transparent; transition:.15s;}
+  .tabs{display:flex; gap:4px; margin-bottom:18px; border-bottom:1px solid var(--line); overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{font-family:var(--mono); font-size:12.5px; letter-spacing:.03em; color:var(--ink-dim); background:none; border:none; padding:10px 16px; cursor:pointer; border-bottom:2px solid transparent; transition:.15s; flex-shrink:0; white-space:nowrap;}
   .tab:hover{color:var(--ink);}
   .tab.active{color:var(--ink); border-bottom-color:var(--amber);}
 
@@ -187,8 +188,15 @@
       </div>
     </div>
     <div class="section-title">Weekly waste %</div>
-    <div class="card">
-      <canvas id="chartWeeklyWaste" height="80"></canvas>
+    <div class="grid2">
+      <div class="card">
+        <h3>SD Waste %</h3>
+        <canvas id="chartWeeklyWasteSD"></canvas>
+      </div>
+      <div class="card">
+        <h3>Bao Waste %</h3>
+        <canvas id="chartWeeklyWasteBao"></canvas>
+      </div>
     </div>
     <div class="section-title">Weekly detail</div>
     <div class="card table-scroll">
@@ -211,8 +219,15 @@
       </div>
     </div>
     <div class="section-title">Monthly waste %</div>
-    <div class="card">
-      <canvas id="chartMonthlyWaste" height="80"></canvas>
+    <div class="grid2">
+      <div class="card">
+        <h3>SD Waste %</h3>
+        <canvas id="chartMonthlyWasteSD"></canvas>
+      </div>
+      <div class="card">
+        <h3>Bao Waste %</h3>
+        <canvas id="chartMonthlyWasteBao"></canvas>
+      </div>
     </div>
     <div class="section-title">Monthly detail</div>
     <div class="card table-scroll">
@@ -227,6 +242,11 @@
 
     <div class="section-title">Left to Pack (EOW) (Packs) — unpacked backlog, by SKU</div>
     <div class="grid2" id="ltpGrid"></div>
+
+    <div class="section-title">Inventory detail</div>
+    <div class="card table-scroll">
+      <table id="inventoryTable"></table>
+    </div>
   </div>
 
   <!-- OEE -->
@@ -236,6 +256,11 @@
 
     <div class="section-title">Overall OEE (%) — by machine, tracked days only</div>
     <div class="grid2" id="oeeGrid"></div>
+
+    <div class="section-title">OEE detail</div>
+    <div class="card table-scroll">
+      <table id="oeeTable"></table>
+    </div>
   </div>
 
   <!-- PRODUCTION -->
@@ -245,6 +270,11 @@
 
     <div class="section-title">Waste (Each) — by machine, tracked days only</div>
     <div class="grid2" id="machWasteGrid"></div>
+
+    <div class="section-title">Production detail</div>
+    <div class="card table-scroll">
+      <table id="productionTable"></table>
+    </div>
   </div>
 
 </div>
@@ -320,10 +350,12 @@ Chart.register({
     const {ctx, chartArea, scales} = chart;
     chart.data.datasets.forEach((dataset)=>{
       if(dataset.avgLine === null || dataset.avgLine === undefined) return;
-      const y = scales.y.getPixelForValue(dataset.avgLine);
+      const scale = scales[dataset.yAxisID || 'y'];
+      const y = scale.getPixelForValue(dataset.avgLine);
       if(y < chartArea.top || y > chartArea.bottom) return;
+      const color = dataset.avgLineColor || '#7C8790';
       ctx.save();
-      ctx.strokeStyle = '#7C8790';
+      ctx.strokeStyle = color;
       ctx.setLineDash([5,4]);
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -331,10 +363,10 @@ Chart.register({
       ctx.lineTo(chartArea.right, y);
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = '#C7CDD3';
+      ctx.fillStyle = color;
       ctx.font = "600 9px 'IBM Plex Mono', monospace";
       ctx.textAlign = 'right';
-      ctx.fillText('Avg', chartArea.right - 3, y - 4);
+      ctx.fillText(dataset.avgLineLabel || 'Avg', chartArea.right - 3, y - 4);
       ctx.restore();
     });
   }
@@ -366,13 +398,6 @@ function avgOf(key){
   if(workedDays.length === 0) return 0;
   return workedDays.reduce((sum,d)=>sum+(d[key]||0), 0) / workedDays.length;
 }
-// bar color helper: last bar (the average) gets a muted, dashed-outline look
-function withAvgColors(dataArr, avgVal, solidColor, avgColor){
-  return {
-    data: [...dataArr, avgVal],
-    backgroundColor: dataArr.map(()=>solidColor).concat([avgColor])
-  };
-}
 // dim the date label for days the plant didn't work (weekends/holidays with no tracked row)
 function dailyTickColor(context){
   const d = dailySlice[context.index];
@@ -401,33 +426,31 @@ function dailyOpts(extra){
   }, extra||{}));
 }
 
+const dailyLabelsNoAvg = dailySlice.map(d=>d.date.slice(5));
+
 const sdProdAvg = avgOf('sd_produced'), sdPackAvg = avgOf('sd_packed');
-const sdProdBars = withAvgColors(dailySlice.map(d=>d.sd_produced), sdProdAvg, '#2E6F66', '#5A6472');
-const sdPackBars = withAvgColors(dailySlice.map(d=>d.sd_packed), sdPackAvg, '#4FC1B0', '#7C8790');
 
 new Chart(document.getElementById('chartDailySD'), {
   type:'bar',
   data:{
-    labels: dailyLabels,
+    labels: dailyLabelsNoAvg,
     datasets:[
-      {label:'SD Produced', data: sdProdBars.data, backgroundColor: sdProdBars.backgroundColor},
-      {label:'SD Packed', data: sdPackBars.data, backgroundColor: sdPackBars.backgroundColor}
+      {label:'SD Produced', data: dailySlice.map(d=>d.sd_produced), backgroundColor:'#2E6F66', avgLine: sdProdAvg, avgLineColor:'#2E6F66', avgLineLabel:'Avg Prod'},
+      {label:'SD Packed', data: dailySlice.map(d=>d.sd_packed), backgroundColor:'#4FC1B0', avgLine: sdPackAvg, avgLineColor:'#4FC1B0', avgLineLabel:'Avg Packed'}
     ]
   },
   options: dailyOpts()
 });
 
 const baoProdAvg = avgOf('bao_produced'), baoPackAvg = avgOf('bao_packed');
-const baoProdBars = withAvgColors(dailySlice.map(d=>d.bao_produced), baoProdAvg, '#8C6423', '#5A6472');
-const baoPackBars = withAvgColors(dailySlice.map(d=>d.bao_packed), baoPackAvg, '#E8A33D', '#7C8790');
 
 new Chart(document.getElementById('chartDailyBao'), {
   type:'bar',
   data:{
-    labels: dailyLabels,
+    labels: dailyLabelsNoAvg,
     datasets:[
-      {label:'Bao Produced', data: baoProdBars.data, backgroundColor: baoProdBars.backgroundColor},
-      {label:'Bao Packed', data: baoPackBars.data, backgroundColor: baoPackBars.backgroundColor}
+      {label:'Bao Produced', data: dailySlice.map(d=>d.bao_produced), backgroundColor:'#8C6423', avgLine: baoProdAvg, avgLineColor:'#8C6423', avgLineLabel:'Avg Prod'},
+      {label:'Bao Packed', data: dailySlice.map(d=>d.bao_packed), backgroundColor:'#E8A33D', avgLine: baoPackAvg, avgLineColor:'#E8A33D', avgLineLabel:'Avg Packed'}
     ]
   },
   options: dailyOpts()
@@ -449,17 +472,21 @@ function wastePctAvg(wasteKey, prodKey){
   return totalProd > 0 ? (totalWaste/totalProd*100) : null;
 }
 
+const sdWastePctSeries = dailySlice.map(d=>wastePct(d,'sd_waste_lbs','sd_good_lbs_prod'));
 const sdWastePctAvg = wastePctAvg('sd_waste_lbs','sd_good_lbs_prod');
-const sdWasteLbsData = [...dailySlice.map(d=>d.sd_waste_lbs), avgOf('sd_waste_lbs')];
+const sdWasteLbsSeries = dailySlice.map(d=>d.sd_waste_lbs);
+const sdWasteLbsAvg = avgOf('sd_waste_lbs');
 new Chart(document.getElementById('chartDailyWasteSD'), {
-  type:'line',
+  type:'bar',
   data:{
-    labels: dailyLabels,
+    labels: dailyLabelsNoAvg,
     datasets:[
-      {label:'SD Waste %', data:[...dailySlice.map(d=>wastePct(d,'sd_waste_lbs','sd_good_lbs_prod')), sdWastePctAvg],
-       borderColor:'#4FC1B0', backgroundColor:'transparent', fill:false, tension:.3, spanGaps:true, pointRadius:3, yAxisID:'y'},
-      {label:'SD Waste (lbs)', data: sdWasteLbsData,
-       borderColor:'#9AA3AD', backgroundColor:'transparent', borderWidth:3, tension:.3, spanGaps:true, pointRadius:0, yAxisID:'y1'}
+      {label:'SD Waste %', data: sdWastePctSeries, type:'bar',
+       backgroundColor:'#4FC1B0', yAxisID:'y',
+       avgLine: sdWastePctAvg, avgLineColor:'#4FC1B0'},
+      {label:'SD Waste (lbs)', data: sdWasteLbsSeries, type:'bar',
+       backgroundColor:'#7C8790', yAxisID:'y1',
+       avgLine: sdWasteLbsAvg, avgLineColor:'#7C8790', avgLineLabel:'Avg (lbs)'}
     ]
   },
   options: dailyOpts({
@@ -471,17 +498,21 @@ new Chart(document.getElementById('chartDailyWasteSD'), {
   })
 });
 
+const baoWastePctSeries = dailySlice.map(d=>wastePct(d,'bao_waste_lbs','bao_good_lbs_prod'));
 const baoWastePctAvg = wastePctAvg('bao_waste_lbs','bao_good_lbs_prod');
-const baoWasteLbsData = [...dailySlice.map(d=>d.bao_waste_lbs), avgOf('bao_waste_lbs')];
+const baoWasteLbsSeries = dailySlice.map(d=>d.bao_waste_lbs);
+const baoWasteLbsAvg = avgOf('bao_waste_lbs');
 new Chart(document.getElementById('chartDailyWasteBao'), {
-  type:'line',
+  type:'bar',
   data:{
-    labels: dailyLabels,
+    labels: dailyLabelsNoAvg,
     datasets:[
-      {label:'Bao Waste %', data:[...dailySlice.map(d=>wastePct(d,'bao_waste_lbs','bao_good_lbs_prod')), baoWastePctAvg],
-       borderColor:'#E8A33D', backgroundColor:'transparent', fill:false, tension:.3, spanGaps:true, pointRadius:3, yAxisID:'y'},
-      {label:'Bao Waste (lbs)', data: baoWasteLbsData,
-       borderColor:'#9AA3AD', backgroundColor:'transparent', borderWidth:3, tension:.3, spanGaps:true, pointRadius:0, yAxisID:'y1'}
+      {label:'Bao Waste %', data: baoWastePctSeries, type:'bar',
+       backgroundColor:'#E8A33D', yAxisID:'y',
+       avgLine: baoWastePctAvg, avgLineColor:'#E8A33D'},
+      {label:'Bao Waste (lbs)', data: baoWasteLbsSeries, type:'bar',
+       backgroundColor:'#7C8790', yAxisID:'y1',
+       avgLine: baoWasteLbsAvg, avgLineColor:'#7C8790', avgLineLabel:'Avg (lbs)'}
     ]
   },
   options: dailyOpts({
@@ -505,14 +536,11 @@ dailyTbl.innerHTML = `<thead><tr><th>Date</th><th>Wk</th><th>SD Prod</th><th>Bao
 
 // WEEKLY
 const wk = DATA.weekly;
-const wkLabels = [...wk.weeks.map(w=>String(w)), 'Avg'];
+const wkLabels = wk.weeks.map(w=>String(w));
 
 function avgOfWk(arr){
   const vals = arr.filter(v=>v!==null && v!==undefined);
   return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
-}
-function withAvgWk(arr){
-  return [...arr, avgOfWk(arr)];
 }
 
 function weeklyOpts(extra){
@@ -527,9 +555,9 @@ function weeklyOpts(extra){
 new Chart(document.getElementById('chartWeeklySD'), {
   type:'bar',
   data:{labels:wkLabels, datasets:[
-    {label:'Ramp Plan', data:withAvgWk(wk.sd.ramp_plan), type:'line', borderColor:'#9AA3AD', backgroundColor:'transparent', pointRadius:0},
-    {label:'Plant Plan', data:withAvgWk(wk.sd.plant_plan), type:'line', borderColor:'#E5484D', backgroundColor:'transparent', pointRadius:0},
-    {label:'Actual Packed', data:withAvgWk(wk.sd.output_packed), backgroundColor:'#4FC1B0'}
+    {label:'Ramp Plan', data:wk.sd.ramp_plan, type:'line', borderColor:'#9AA3AD', backgroundColor:'transparent', pointRadius:0},
+    {label:'Plant Plan', data:wk.sd.plant_plan, type:'line', borderColor:'#E5484D', backgroundColor:'transparent', pointRadius:0},
+    {label:'Actual Packed', data:wk.sd.output_packed, backgroundColor:'#4FC1B0', avgLine: avgOfWk(wk.sd.output_packed), avgLineColor:'#4FC1B0'}
   ]},
   options: weeklyOpts()
 });
@@ -537,9 +565,9 @@ new Chart(document.getElementById('chartWeeklySD'), {
 new Chart(document.getElementById('chartWeeklyBao'), {
   type:'bar',
   data:{labels:wkLabels, datasets:[
-    {label:'Ramp Plan', data:withAvgWk(wk.bao.ramp_plan), type:'line', borderColor:'#9AA3AD', backgroundColor:'transparent', pointRadius:0},
-    {label:'Plant Plan', data:withAvgWk(wk.bao.plant_plan), type:'line', borderColor:'#E5484D', backgroundColor:'transparent', pointRadius:0},
-    {label:'Actual Packed', data:withAvgWk(wk.bao.output_packed), backgroundColor:'#E8A33D'}
+    {label:'Ramp Plan', data:wk.bao.ramp_plan, type:'line', borderColor:'#9AA3AD', backgroundColor:'transparent', pointRadius:0},
+    {label:'Plant Plan', data:wk.bao.plant_plan, type:'line', borderColor:'#E5484D', backgroundColor:'transparent', pointRadius:0},
+    {label:'Actual Packed', data:wk.bao.output_packed, backgroundColor:'#E8A33D', avgLine: avgOfWk(wk.bao.output_packed), avgLineColor:'#E8A33D'}
   ]},
   options: weeklyOpts()
 });
@@ -559,14 +587,31 @@ function sumBy(arr, keyFn, valKeys){
 const wasteByWeek = sumBy(daily, d=>Math.round(d.week), ['sd_waste_lbs','bao_waste_lbs']);
 const weeklySDWasteLbs = wk.weeks.map(w => (wasteByWeek[w]||{}).sd_waste_lbs || 0);
 const weeklyBaoWasteLbs = wk.weeks.map(w => (wasteByWeek[w]||{}).bao_waste_lbs || 0);
+const weeklySDWastePct = wk.sd.waste_pct.map(v=>v*100);
+const weeklyBaoWastePct = wk.bao.waste_pct.map(v=>v===null?null:v*100);
 
-new Chart(document.getElementById('chartWeeklyWaste'), {
-  type:'line',
+new Chart(document.getElementById('chartWeeklyWasteSD'), {
+  type:'bar',
   data:{labels:wkLabels, datasets:[
-    {label:'SD Waste %', data:withAvgWk(wk.sd.waste_pct.map(v=>v*100)), borderColor:'#4FC1B0', backgroundColor:'transparent', tension:.3, yAxisID:'y'},
-    {label:'Bao Waste %', data:withAvgWk(wk.bao.waste_pct.map(v=>v===null?null:v*100)), borderColor:'#E8A33D', backgroundColor:'transparent', tension:.3, spanGaps:true, yAxisID:'y'},
-    {label:'SD Waste (lbs)', data:withAvgWk(weeklySDWasteLbs), borderColor:'#9AA3AD', backgroundColor:'transparent', borderWidth:3, tension:.3, pointRadius:0, yAxisID:'y1'},
-    {label:'Bao Waste (lbs)', data:withAvgWk(weeklyBaoWasteLbs), borderColor:'#B8A94A', backgroundColor:'transparent', borderWidth:3, tension:.3, pointRadius:0, yAxisID:'y1'}
+    {label:'SD Waste %', data:weeklySDWastePct, type:'bar', backgroundColor:'#4FC1B0', yAxisID:'y',
+     avgLine: avgOfWk(weeklySDWastePct), avgLineColor:'#4FC1B0'},
+    {label:'SD Waste (lbs)', data:weeklySDWasteLbs, type:'bar', backgroundColor:'#7C8790', yAxisID:'y1',
+     avgLine: avgOfWk(weeklySDWasteLbs), avgLineColor:'#7C8790', avgLineLabel:'Avg (lbs)'}
+  ]},
+  options: weeklyOpts({scales:{
+    x:{grid:{color:gridColor}, ticks:{maxRotation:0, minRotation:0, autoSkip:false}},
+    y:{grid:{color:gridColor}, ticks:{callback:v=>v+'%'}, position:'left'},
+    y1:{grid:{display:false}, beginAtZero:true, ticks:{color:'#7C8790', callback:v=>Math.round(v).toLocaleString('en-US')}, position:'right'}
+  }})
+});
+
+new Chart(document.getElementById('chartWeeklyWasteBao'), {
+  type:'bar',
+  data:{labels:wkLabels, datasets:[
+    {label:'Bao Waste %', data:weeklyBaoWastePct, type:'bar', backgroundColor:'#E8A33D', yAxisID:'y',
+     avgLine: avgOfWk(weeklyBaoWastePct), avgLineColor:'#E8A33D'},
+    {label:'Bao Waste (lbs)', data:weeklyBaoWasteLbs, type:'bar', backgroundColor:'#B8A94A', yAxisID:'y1',
+     avgLine: avgOfWk(weeklyBaoWasteLbs), avgLineColor:'#B8A94A', avgLineLabel:'Avg (lbs)'}
   ]},
   options: weeklyOpts({scales:{
     x:{grid:{color:gridColor}, ticks:{maxRotation:0, minRotation:0, autoSkip:false}},
@@ -590,38 +635,32 @@ weeklyTbl.innerHTML = `<thead><tr><th>Week</th><th>Start</th><th>Period</th><th>
 // MONTHLY
 const mo = DATA.monthly;
 const inProgressIdx = mo.periods.length - 1; // the most recent period is assumed still in progress
-const moLabels = [...mo.periods.map((p,i)=> i===inProgressIdx ? p+'*' : p), 'Avg'];
+const moLabels = mo.periods.map((p,i)=> i===inProgressIdx ? p+'*' : p);
 
 function avgOf4(arr){
   const vals = arr.filter(v=>v!==null && v!==undefined);
   return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
 }
-function withAvg(arr){
-  const v = avgOf4(arr);
-  return [...arr, v];
-}
-// bar colors: in-progress period gets a lighter/faded shade, the Avg bar gets neutral gray
-function monthlyBarColors(normalColor, lightColor, avgColor){
-  const arr = mo.periods.map((p,i)=> i===inProgressIdx ? lightColor : normalColor);
-  arr.push(avgColor);
-  return arr;
+// bar colors: in-progress period gets a lighter/faded shade
+function monthlyBarColors(normalColor, lightColor){
+  return mo.periods.map((p,i)=> i===inProgressIdx ? lightColor : normalColor);
 }
 
 new Chart(document.getElementById('chartMonthlySD'), {
   type:'bar',
   data:{labels:moLabels, datasets:[
-    {label:'Ramp Plan', data: withAvg(mo.sd.ramp_plan), type:'line', borderColor:'#9AA3AD', backgroundColor:'transparent', pointRadius:2, tension:.2},
-    {label:'Plant Plan', data: withAvg(mo.sd.plant_plan), type:'line', borderColor:'#E5484D', backgroundColor:'transparent', pointRadius:2, tension:.2},
-    {label:'Actual Packed', data: withAvg(mo.sd.output_packed), backgroundColor: monthlyBarColors('#4FC1B0','rgba(79,193,176,.35)','#5A6472')}
+    {label:'Ramp Plan', data: mo.sd.ramp_plan, type:'line', borderColor:'#9AA3AD', backgroundColor:'transparent', pointRadius:2, tension:.2},
+    {label:'Plant Plan', data: mo.sd.plant_plan, type:'line', borderColor:'#E5484D', backgroundColor:'transparent', pointRadius:2, tension:.2},
+    {label:'Actual Packed', data: mo.sd.output_packed, backgroundColor: monthlyBarColors('#4FC1B0','rgba(79,193,176,.35)'), avgLine: avgOf4(mo.sd.output_packed), avgLineColor:'#4FC1B0'}
   ]},
   options: baseOpts()
 });
 new Chart(document.getElementById('chartMonthlyBao'), {
   type:'bar',
   data:{labels:moLabels, datasets:[
-    {label:'Ramp Plan', data: withAvg(mo.bao.ramp_plan), type:'line', borderColor:'#9AA3AD', backgroundColor:'transparent', pointRadius:2, tension:.2},
-    {label:'Plant Plan', data: withAvg(mo.bao.plant_plan), type:'line', borderColor:'#E5484D', backgroundColor:'transparent', pointRadius:2, tension:.2},
-    {label:'Actual Packed', data: withAvg(mo.bao.output_packed), backgroundColor: monthlyBarColors('#E8A33D','rgba(232,163,61,.35)','#5A6472')}
+    {label:'Ramp Plan', data: mo.bao.ramp_plan, type:'line', borderColor:'#9AA3AD', backgroundColor:'transparent', pointRadius:2, tension:.2},
+    {label:'Plant Plan', data: mo.bao.plant_plan, type:'line', borderColor:'#E5484D', backgroundColor:'transparent', pointRadius:2, tension:.2},
+    {label:'Actual Packed', data: mo.bao.output_packed, backgroundColor: monthlyBarColors('#E8A33D','rgba(232,163,61,.35)'), avgLine: avgOf4(mo.bao.output_packed), avgLineColor:'#E8A33D'}
   ]},
   options: baseOpts()
 });
@@ -634,13 +673,26 @@ function sumWasteForPeriod(p, key){
 const monthlySDWasteLbs = mo.periods.map(p => sumWasteForPeriod(p,'sd_waste_lbs'));
 const monthlyBaoWasteLbs = mo.periods.map(p => sumWasteForPeriod(p,'bao_waste_lbs'));
 
-new Chart(document.getElementById('chartMonthlyWaste'), {
+new Chart(document.getElementById('chartMonthlyWasteSD'), {
   type:'bar',
   data:{labels:moLabels, datasets:[
-    {label:'SD Waste %', data: withAvg(mo.sd.waste_pct.map(v=>v===null?null:v*100)), backgroundColor: monthlyBarColors('#4FC1B0','rgba(79,193,176,.35)','#5A6472'), yAxisID:'y'},
-    {label:'Bao Waste %', data: withAvg(mo.bao.waste_pct.map(v=>v===null?null:v*100)), backgroundColor: monthlyBarColors('#E8A33D','rgba(232,163,61,.35)','#5A6472'), yAxisID:'y'},
-    {label:'SD Waste (lbs)', data: withAvg(monthlySDWasteLbs), type:'line', borderColor:'#9AA3AD', backgroundColor:'transparent', borderWidth:3, pointRadius:2, tension:.2, yAxisID:'y1'},
-    {label:'Bao Waste (lbs)', data: withAvg(monthlyBaoWasteLbs), type:'line', borderColor:'#B8A94A', backgroundColor:'transparent', borderWidth:3, pointRadius:2, tension:.2, yAxisID:'y1'}
+    {label:'SD Waste %', data: mo.sd.waste_pct.map(v=>v===null?null:v*100), backgroundColor: monthlyBarColors('#4FC1B0','rgba(79,193,176,.35)'), avgLine: avgOf4(mo.sd.waste_pct.map(v=>v===null?null:v*100)), avgLineColor:'#4FC1B0', yAxisID:'y'},
+    {label:'SD Waste (lbs)', data: monthlySDWasteLbs, type:'bar', backgroundColor:'#7C8790', yAxisID:'y1',
+     avgLine: avgOf4(monthlySDWasteLbs), avgLineColor:'#7C8790', avgLineLabel:'Avg (lbs)'}
+  ]},
+  options: baseOpts({scales:{
+    x:{grid:{color:gridColor}},
+    y:{grid:{color:gridColor}, ticks:{callback:v=>v+'%'}, position:'left'},
+    y1:{grid:{display:false}, beginAtZero:true, ticks:{color:'#7C8790', callback:v=>Math.round(v).toLocaleString('en-US')}, position:'right'}
+  }})
+});
+
+new Chart(document.getElementById('chartMonthlyWasteBao'), {
+  type:'bar',
+  data:{labels:moLabels, datasets:[
+    {label:'Bao Waste %', data: mo.bao.waste_pct.map(v=>v===null?null:v*100), backgroundColor: monthlyBarColors('#E8A33D','rgba(232,163,61,.35)'), avgLine: avgOf4(mo.bao.waste_pct.map(v=>v===null?null:v*100)), avgLineColor:'#E8A33D', yAxisID:'y'},
+    {label:'Bao Waste (lbs)', data: monthlyBaoWasteLbs, type:'bar', backgroundColor:'#B8A94A', yAxisID:'y1',
+     avgLine: avgOf4(monthlyBaoWasteLbs), avgLineColor:'#B8A94A', avgLineLabel:'Avg (lbs)'}
   ]},
   options: baseOpts({scales:{
     x:{grid:{color:gridColor}},
@@ -703,6 +755,26 @@ function buildSkuGrid(containerId, dataObj, idPrefix){
 buildSkuGrid('fgohGrid', inv.fg_on_hand, 'fgoh');
 buildSkuGrid('ltpGrid', inv.left_to_pack, 'ltp');
 
+// Inventory detail table — one row per week, FG on hand + left to pack per SKU
+const fgohSkus = Object.keys(inv.fg_on_hand);
+const ltpSkus = Object.keys(inv.left_to_pack);
+const invFmt = v => (v===null||v===undefined||isNaN(v)) ? '—' : Math.round(v).toLocaleString('en-US');
+
+const inventoryTbl = document.getElementById('inventoryTable');
+inventoryTbl.className = 'stackable';
+inventoryTbl.innerHTML = `<thead><tr>
+  <th>Week</th>
+  ${fgohSkus.map(s=>`<th>${s} OH</th>`).join('')}
+  ${ltpSkus.map(s=>`<th>${s} LTP</th>`).join('')}
+</tr></thead>
+<tbody>${inv.weeks.map((w,i)=>{
+  return `<tr>
+    <td data-label="Week">Wk ${w}</td>
+    ${fgohSkus.map(s=>`<td data-label="${s} OH">${invFmt(inv.fg_on_hand[s][i])}</td>`).join('')}
+    ${ltpSkus.map(s=>`<td data-label="${s} LTP">${invFmt(inv.left_to_pack[s][i])}</td>`).join('')}
+  </tr>`;
+}).reverse().join('')}</tbody>`;
+
 // OEE — machine uptime and overall OEE, by machine (only machines with real data)
 const oeeMod = DATA.oee_module;
 const OEE_WINDOW = 21;
@@ -750,6 +822,38 @@ function buildMachineGrid(containerId, records, idPrefix, formatter){
 buildMachineGrid('uptimeGrid', oeeMod.uptime, 'uptime', v => v.toFixed(1)+'h');
 buildMachineGrid('oeeGrid', oeeMod.oee, 'oeeChart', v => Math.round(v*100)+'%');
 
+// OEE detail table — same 21-day window as the charts above,
+// uptime hours + overall OEE % per machine, most recent day first.
+const uptimeWindowed = oeeMod.uptime.slice(-OEE_WINDOW);
+const oeeWindowed = oeeMod.oee.slice(-OEE_WINDOW);
+const oeeFmtHrs = v => (v===null||v===undefined||isNaN(v)) ? '—' : v.toFixed(1)+'h';
+const oeeFmtPct = v => (v===null||v===undefined||isNaN(v)) ? '—' : Math.round(v*100)+'%';
+
+const oeeTbl = document.getElementById('oeeTable');
+oeeTbl.className = 'stackable';
+oeeTbl.innerHTML = `<thead><tr>
+  <th>Date</th>
+  <th>JBM #1 Up</th><th>JBM #2 Up</th><th>Rheon #1 Up</th><th>Rheon #2 Up</th><th>Rheon #3 Up</th>
+  <th>JBM #1 OEE</th><th>JBM #2 OEE</th><th>Rheon #1 OEE</th><th>Rheon #2 OEE</th><th>Rheon #3 OEE</th>
+</tr></thead>
+<tbody>${uptimeWindowed.map((u,i)=>({u, o: oeeWindowed[i]}))
+  .filter(({u,o}) => ['JBM #1','JBM #2','Rheon #1','Rheon #2','Rheon #3'].some(m => (u[m]!==null && u[m]!==undefined && !isNaN(u[m])) || (o[m]!==null && o[m]!==undefined && !isNaN(o[m]))))
+  .map(({u,o})=>{
+  return `<tr>
+    <td data-label="Date">${u.date}</td>
+    <td data-label="JBM #1 Up">${oeeFmtHrs(u['JBM #1'])}</td>
+    <td data-label="JBM #2 Up">${oeeFmtHrs(u['JBM #2'])}</td>
+    <td data-label="Rheon #1 Up">${oeeFmtHrs(u['Rheon #1'])}</td>
+    <td data-label="Rheon #2 Up">${oeeFmtHrs(u['Rheon #2'])}</td>
+    <td data-label="Rheon #3 Up">${oeeFmtHrs(u['Rheon #3'])}</td>
+    <td data-label="JBM #1 OEE">${oeeFmtPct(o['JBM #1'])}</td>
+    <td data-label="JBM #2 OEE">${oeeFmtPct(o['JBM #2'])}</td>
+    <td data-label="Rheon #1 OEE">${oeeFmtPct(o['Rheon #1'])}</td>
+    <td data-label="Rheon #2 OEE">${oeeFmtPct(o['Rheon #2'])}</td>
+    <td data-label="Rheon #3 OEE">${oeeFmtPct(o['Rheon #3'])}</td>
+  </tr>`;
+}).reverse().join('')}</tbody>`;
+
 // PRODUCTION — pieces formed and waste, by machine
 const prodMod = DATA.prod_module;
 
@@ -790,6 +894,37 @@ function buildProdGrid(containerId, records, idPrefix, formatter){
 
 buildProdGrid('piecesGrid', prodMod.pieces, 'pieces', v => Math.round(v).toLocaleString('en-US'));
 buildProdGrid('machWasteGrid', prodMod.waste, 'machWaste', v => Math.round(v).toLocaleString('en-US'));
+
+// Production detail table — same 21-day window as the charts above,
+// pieces formed + waste per machine, most recent day first.
+const prodWindowed = prodMod.pieces.slice(-OEE_WINDOW);
+const prodWasteWindowed = prodMod.waste.slice(-OEE_WINDOW);
+const prodFmt = v => (v===null||v===undefined||isNaN(v)) ? '—' : Math.round(v).toLocaleString('en-US');
+
+const productionTbl = document.getElementById('productionTable');
+productionTbl.className = 'stackable';
+productionTbl.innerHTML = `<thead><tr>
+  <th>Date</th>
+  <th>JBM #1 Pcs</th><th>JBM #2 Pcs</th><th>Rheon #1 Pcs</th><th>Rheon #2 Pcs</th><th>Rheon #3 Pcs</th>
+  <th>JBM #1 Waste</th><th>JBM #2 Waste</th><th>Rheon #1 Waste</th><th>Rheon #2 Waste</th><th>Rheon #3 Waste</th>
+</tr></thead>
+<tbody>${prodWindowed.map((p,i)=>({p, w: prodWasteWindowed[i]}))
+  .filter(({p,w}) => ['JBM #1','JBM #2','Rheon #1','Rheon #2','Rheon #3'].some(m => (p[m]!==null && p[m]!==undefined && !isNaN(p[m])) || (w[m]!==null && w[m]!==undefined && !isNaN(w[m]))))
+  .map(({p,w})=>{
+  return `<tr>
+    <td data-label="Date">${p.date}</td>
+    <td data-label="JBM #1 Pcs">${prodFmt(p['JBM #1'])}</td>
+    <td data-label="JBM #2 Pcs">${prodFmt(p['JBM #2'])}</td>
+    <td data-label="Rheon #1 Pcs">${prodFmt(p['Rheon #1'])}</td>
+    <td data-label="Rheon #2 Pcs">${prodFmt(p['Rheon #2'])}</td>
+    <td data-label="Rheon #3 Pcs">${prodFmt(p['Rheon #3'])}</td>
+    <td data-label="JBM #1 Waste">${prodFmt(w['JBM #1'])}</td>
+    <td data-label="JBM #2 Waste">${prodFmt(w['JBM #2'])}</td>
+    <td data-label="Rheon #1 Waste">${prodFmt(w['Rheon #1'])}</td>
+    <td data-label="Rheon #2 Waste">${prodFmt(w['Rheon #2'])}</td>
+    <td data-label="Rheon #3 Waste">${prodFmt(w['Rheon #3'])}</td>
+  </tr>`;
+}).reverse().join('')}</tbody>`;
 
 // (mobile table stacking is handled by CSS + data-label attrs set below)
 </script>
