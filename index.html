@@ -265,11 +265,8 @@
 
   <!-- PRODUCTION -->
   <div class="panel-section" id="tab-production">
-    <div class="section-title">Pieces Formed (Each) — by machine, tracked days only</div>
-    <div class="grid2" id="piecesGrid"></div>
-
-    <div class="section-title">Waste (Each) — by machine, tracked days only</div>
-    <div class="grid2" id="machWasteGrid"></div>
+    <div class="section-title">Pieces Formed vs Waste (Each) — by machine, tracked days only</div>
+    <div id="machinePairsContainer"></div>
 
     <div class="section-title">Production detail</div>
     <div class="card table-scroll">
@@ -857,43 +854,58 @@ oeeTbl.innerHTML = `<thead><tr>
 // PRODUCTION — pieces formed and waste, by machine
 const prodMod = DATA.prod_module;
 
-function buildProdGrid(containerId, records, idPrefix, formatter){
-  const windowed = records.slice(-OEE_WINDOW);
-  const dates = windowed.map(r => r.date.slice(5));
-  const container = document.getElementById(containerId);
-  container.innerHTML = prodMod.machines.map((m,i)=>`
-    <div class="card">
-      <h3>${m}</h3>
-      <canvas id="${idPrefix}_${i}"></canvas>
-    </div>
-  `).join('');
-  prodMod.machines.forEach((m,i)=>{
-    const data = windowed.map(r => (r[m]===undefined || r[m]===null || isNaN(r[m])) ? null : r[m]);
-    const avgVal = avgOfArr(data);
-    const color = skuColors[i%skuColors.length];
-    new Chart(document.getElementById(`${idPrefix}_${i}`), {
-      type:'bar',
-      data:{
-        labels: dates,
-        datasets:[{
-          label:m, data:data,
-          backgroundColor: color,
-          avgLine: avgVal
-        }]
-      },
-      options: baseOpts({
-        plugins:{legend:{display:false}},
-        scales:{
-          x:{grid:{color:gridColor}, ticks:{maxRotation:90, minRotation:90, autoSkip:false}},
-          y:{grid:{color:gridColor}, beginAtZero:true, ticks:{callback: formatter}}
-        }
-      })
-    });
+function buildMachineChart(canvasId, windowed, dates, metricKey, color, formatter){
+  const data = windowed.map(r => (r[metricKey]===undefined || r[metricKey]===null || isNaN(r[metricKey])) ? null : r[metricKey]);
+  const avgVal = avgOfArr(data);
+  new Chart(document.getElementById(canvasId), {
+    type:'bar',
+    data:{
+      labels: dates,
+      datasets:[{
+        label:metricKey, data:data,
+        backgroundColor: color,
+        avgLine: avgVal
+      }]
+    },
+    options: baseOpts({
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:gridColor}, ticks:{maxRotation:90, minRotation:90, autoSkip:false}},
+        y:{grid:{color:gridColor}, beginAtZero:true, ticks:{callback: formatter}}
+      }
+    })
   });
 }
 
-buildProdGrid('piecesGrid', prodMod.pieces, 'pieces', v => Math.round(v).toLocaleString('en-US'));
-buildProdGrid('machWasteGrid', prodMod.waste, 'machWaste', v => Math.round(v).toLocaleString('en-US'));
+function buildMachinePairs(containerId, piecesRecords, wasteRecords){
+  const piecesWindowed = piecesRecords.slice(-OEE_WINDOW);
+  const wasteWindowed = wasteRecords.slice(-OEE_WINDOW);
+  const dates = piecesWindowed.map(r => r.date.slice(5));
+  const container = document.getElementById(containerId);
+  const fmt = v => Math.round(v).toLocaleString('en-US');
+
+  container.innerHTML = prodMod.machines.map((m,i)=>`
+    <div class="section-title" style="margin-top:${i===0?'0':'26px'};">${m}</div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Pieces Formed</h3>
+        <canvas id="pieces_${i}"></canvas>
+      </div>
+      <div class="card">
+        <h3>Waste</h3>
+        <canvas id="machWaste_${i}"></canvas>
+      </div>
+    </div>
+  `).join('');
+
+  prodMod.machines.forEach((m,i)=>{
+    const color = skuColors[i%skuColors.length];
+    buildMachineChart(`pieces_${i}`, piecesWindowed, dates, m, color, fmt);
+    buildMachineChart(`machWaste_${i}`, wasteWindowed, dates, m, color, fmt);
+  });
+}
+
+buildMachinePairs('machinePairsContainer', prodMod.pieces, prodMod.waste);
 
 // Production detail table — same 21-day window as the charts above,
 // pieces formed + waste per machine, most recent day first.
