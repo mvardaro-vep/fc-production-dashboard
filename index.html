@@ -166,10 +166,6 @@
         <canvas id="chartDailyWasteBao" height="140"></canvas>
       </div>
     </div>
-    <div class="section-title">Daily log</div>
-    <div class="card table-scroll">
-      <table id="dailyTable"></table>
-    </div>
   </div>
 
   <!-- WEEKLY -->
@@ -189,10 +185,6 @@
     <div class="section-title">Weekly waste %</div>
     <div class="card">
       <canvas id="chartWeeklyWaste" height="80"></canvas>
-    </div>
-    <div class="section-title">Weekly detail</div>
-    <div class="card table-scroll">
-      <table id="weeklyTable"></table>
     </div>
   </div>
 
@@ -214,10 +206,6 @@
     <div class="card">
       <canvas id="chartMonthlyWaste" height="80"></canvas>
     </div>
-    <div class="section-title">Monthly detail</div>
-    <div class="card table-scroll">
-      <table id="monthlyTable"></table>
-    </div>
   </div>
 
   <!-- YEARLY -->
@@ -234,10 +222,6 @@
         <div class="cap" id="yearlyLabelBao">Year to date</div>
         <canvas id="chartYearlyBao"></canvas>
       </div>
-    </div>
-    <div class="section-title">Periods included</div>
-    <div class="card table-scroll">
-      <table id="yearlyTable"></table>
     </div>
   </div>
 
@@ -520,16 +504,6 @@ new Chart(document.getElementById('chartDailyWasteBao'), {
   })
 });
 
-// daily table
-const dailyTbl = document.getElementById('dailyTable');
-dailyTbl.className = 'stackable';
-dailyTbl.innerHTML = `<thead><tr><th>Date</th><th>Wk</th><th>SD Prod</th><th>Bao Prod</th><th>SD Waste</th><th>Bao Waste</th><th>SD Packed</th><th>Bao Packed</th></tr></thead>
-<tbody>${daily.filter(d=>d.worked).slice().reverse().map(d=>`<tr>
-  <td data-label="Date">${d.date}</td><td data-label="Wk">${d.week}</td><td data-label="SD Prod">${fmt(d.sd_produced)}</td><td data-label="Bao Prod">${fmt(d.bao_produced)}</td>
-  <td data-label="SD Waste" class="${d.sd_waste_lbs>500?'neg':''}">${fmt(d.sd_waste_lbs)}</td><td data-label="Bao Waste" class="${d.bao_waste_lbs>300?'neg':''}">${fmt(d.bao_waste_lbs)}</td>
-  <td data-label="SD Packed">${fmt(d.sd_packed)}</td><td data-label="Bao Packed">${fmt(d.bao_packed)}</td>
-</tr>`).join('')}</tbody>`;
-
 // WEEKLY
 const wk = DATA.weekly;
 const wkLabels = [...wk.weeks.map(w=>String(w)), 'Avg'];
@@ -602,18 +576,6 @@ new Chart(document.getElementById('chartWeeklyWaste'), {
   }})
 });
 
-const weeklyTbl = document.getElementById('weeklyTable');
-weeklyTbl.className = 'stackable';
-weeklyTbl.innerHTML = `<thead><tr><th>Week</th><th>Start</th><th>Period</th><th>SD Actual</th><th>SD vs Ramp</th><th>Bao Actual</th><th>Bao vs Ramp</th><th>SD Waste%</th><th>Bao Waste%</th></tr></thead>
-<tbody>${wk.weeks.map((w,i)=>{
-  const sdDiff = wk.sd.output_packed[i]-wk.sd.ramp_plan[i];
-  const baoDiff = wk.bao.output_packed[i]-wk.bao.ramp_plan[i];
-  return `<tr><td data-label="Week">Week ${w}</td><td data-label="Start">${wk.week_start[i]}</td><td data-label="Period">${wk.period[i]}</td>
-    <td data-label="SD Actual">${fmt(wk.sd.output_packed[i])}</td><td data-label="SD vs Ramp" class="${sdDiff<0?'neg':'pos'}">${sdDiff>=0?'+':''}${fmt(sdDiff)}</td>
-    <td data-label="Bao Actual">${fmt(wk.bao.output_packed[i])}</td><td data-label="Bao vs Ramp" class="${baoDiff<0?'neg':'pos'}">${baoDiff>=0?'+':''}${fmt(baoDiff)}</td>
-    <td data-label="SD Waste%">${pct(wk.sd.waste_pct[i])}</td><td data-label="Bao Waste%">${pct(wk.bao.waste_pct[i])}</td></tr>`;
-}).reverse().join('')}</tbody>`;
-
 // MONTHLY
 const mo = DATA.monthly;
 const inProgressIdx = mo.periods.length - 1; // the most recent period is assumed still in progress
@@ -676,18 +638,6 @@ new Chart(document.getElementById('chartMonthlyWaste'), {
   }})
 });
 
-const monthlyTbl = document.getElementById('monthlyTable');
-monthlyTbl.className = 'stackable';
-monthlyTbl.innerHTML = `<thead><tr><th>Period</th><th>SD Ramp</th><th>SD Actual</th><th>SD Diff</th><th>SD Waste%</th><th>Bao Ramp</th><th>Bao Actual</th><th>Bao Diff</th><th>Bao Waste%</th></tr></thead>
-<tbody>${mo.periods.map((p,i)=>{
-  const sdDiff = mo.sd.output_packed[i]-mo.sd.ramp_plan[i];
-  const baoDiff = mo.bao.output_packed[i]-mo.bao.ramp_plan[i];
-  return `<tr><td data-label="Period">${p}</td><td data-label="SD Ramp">${fmt(mo.sd.ramp_plan[i])}</td><td data-label="SD Actual">${fmt(mo.sd.output_packed[i])}</td>
-   <td data-label="SD Diff" class="${sdDiff<0?'neg':'pos'}">${sdDiff>=0?'+':''}${fmt(sdDiff)}</td><td data-label="SD Waste%">${pct(mo.sd.waste_pct[i])}</td>
-   <td data-label="Bao Ramp">${fmt(mo.bao.ramp_plan[i])}</td><td data-label="Bao Actual">${fmt(mo.bao.output_packed[i])}</td>
-   <td data-label="Bao Diff" class="${baoDiff<0?'neg':'pos'}">${baoDiff>=0?'+':''}${fmt(baoDiff)}</td><td data-label="Bao Waste%">${pct(mo.bao.waste_pct[i])}</td></tr>`;
-}).join('')}</tbody>`;
-
 // YEARLY (year-to-date rollup across all reported periods)
 const yr = DATA.yearly;
 
@@ -737,16 +687,6 @@ new Chart(document.getElementById('chartYearlyBao'), {
   data: yearlyChartData(yr.bao),
   options: baseOpts({plugins:{legend:{display:false}}})
 });
-
-const yearlyTbl = document.getElementById('yearlyTable');
-yearlyTbl.className = 'stackable';
-yearlyTbl.innerHTML = `<thead><tr><th>Line</th><th>Ramp Plan</th><th>Plant Plan</th><th>SC Plan</th><th>Actual</th><th>Diff v Ramp</th><th>Diff v Plant</th><th>Waste%</th></tr></thead>
-<tbody>
-  <tr><td data-label="Line">SD (${yr.label})</td><td data-label="Ramp Plan">${fmt(yr.sd.ramp_plan)}</td><td data-label="Plant Plan">${fmt(yr.sd.plant_plan)}</td><td data-label="SC Plan">${fmt(yr.sd.sc_plan)}</td><td data-label="Actual">${fmt(yr.sd.output_packed)}</td>
-   <td data-label="Diff v Ramp" class="${diffCls(yrSdDiffRamp)}">${diffStr(yrSdDiffRamp)}</td><td data-label="Diff v Plant" class="${diffCls(yrSdDiffPlant)}">${diffStr(yrSdDiffPlant)}</td><td data-label="Waste%">${pct(yr.sd.waste_pct)}</td></tr>
-  <tr><td data-label="Line">Bao (${yr.label})</td><td data-label="Ramp Plan">${fmt(yr.bao.ramp_plan)}</td><td data-label="Plant Plan">${fmt(yr.bao.plant_plan)}</td><td data-label="SC Plan">${fmt(yr.bao.sc_plan)}</td><td data-label="Actual">${fmt(yr.bao.output_packed)}</td>
-   <td data-label="Diff v Ramp" class="${diffCls(yrBaoDiffRamp)}">${diffStr(yrBaoDiffRamp)}</td><td data-label="Diff v Plant" class="${diffCls(yrBaoDiffPlant)}">${diffStr(yrBaoDiffPlant)}</td><td data-label="Waste%">${pct(yr.bao.waste_pct)}</td></tr>
-</tbody>`;
 
 // INVENTORY (trailing 11 weeks only)
 const inv = DATA.inventory;
